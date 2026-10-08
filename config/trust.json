@@ -1,0 +1,35 @@
+{
+  "version": "1.0.0",
+  "name": "TrustRoute Evidence & Trust Engine Parameters",
+  "description": "Configurable parameters for evidence weighing, freshness decay, and decision thresholds.",
+  "prior_probability": 0.10,
+  "prior_logit": -2.1972245773362196,
+  "crowd_evidence_cap": 2.6,
+  "weights": {
+    "official_exact": 2.5,
+    "official_partial": 1.5,
+    "independent_news": 1.2,
+    "independent_crowd": 0.8,
+    "additional_independent_crowd": 0.8,
+    "location_time_consistency": 0.5,
+    "credible_contradiction": -1.2,
+    "weak_ungroundable": -2.0
+  },
+  "freshness_decay_lambda_per_minute": {
+    "crowd": 0.02,
+    "news": 0.005,
+    "official": 0.001
+  },
+  "thresholds": {
+    "ignore_max": 0.30,
+    "watch_max": 0.65,
+    "confirmed_min": 0.65
+  },
+  "time_windows_minutes": {
+    "event_dedup_window": 60,
+    "copy_ring_burst_window": 10,
+    "stale_threshold_minutes": 120,
+    "event_expiry_minutes": 180
+  },
+  "default_severity": "MEDIUM"
+}

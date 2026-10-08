@@ -1,0 +1,280 @@
+{
+  "city": "Mumbai",
+  "country": "India",
+  "currency": "INR",
+  "currency_symbol": "₹",
+  "fares": {
+    "best_bus": {
+      "non_ac_base_fare_inr": 10,
+      "ac_base_fare_inr": 12,
+      "non_ac_slabs_inr": [
+        { "distance_km": "0-5", "fare_inr": 10 },
+        { "distance_km": "5-10", "fare_inr": 15 },
+        { "distance_km": "10-15", "fare_inr": 20 },
+        { "distance_km": "15+", "fare_inr": 25 }
+      ],
+      "ac_slabs_inr": [
+        { "distance_km": "0-5", "fare_inr": 12 },
+        { "distance_km": "5-10", "fare_inr": 18 },
+        { "distance_km": "10-15", "fare_inr": 25 },
+        { "distance_km": "15+", "fare_inr": 30 }
+      ],
+      "notes": "BEST bus fares in INR (Regular: ₹10, AC: ₹12 base)"
+    },
+    "auto_rickshaw": {
+      "minimum_fare_day_inr": 27.0,
+      "minimum_fare_night_inr": 32.0,
+      "per_km_rate_inr": 18.22,
+      "first_km_included": 1.5,
+      "day_window_hours": "05:00-24:00",
+      "night_window_hours": "00:00-05:00",
+      "notes": "Minimum flag fare: ₹27 morning/day (first 1.5 km), ₹32 night, ₹18.22/km thereafter"
+    },
+    "taxi_kaali_peeli": {
+      "minimum_fare_day_inr": 33.0,
+      "minimum_fare_night_inr": 41.25,
+      "per_km_rate_inr": 21.90,
+      "first_km_included": 1.5,
+      "notes": "Minimum flag fare: ₹33 day (first 1.5 km), ₹41.25 night (+25%), ₹21.90/km thereafter"
+    },
+    "suburban_railway": {
+      "second_class_slabs_inr": [5, 10, 15, 20],
+      "first_class_slabs_inr": [50, 75, 105, 140],
+      "ac_local_slabs_inr": [65, 95, 135, 180],
+      "notes": "Suburban rail distance slabs in INR"
+    },
+    "metro": {
+      "slabs_inr": [
+        { "distance_km": "0-3", "fare_inr": 10 },
+        { "distance_km": "3-12", "fare_inr": 20 },
+        { "distance_km": "12-18", "fare_inr": 30 },
+        { "distance_km": "18-24", "fare_inr": 40 },
+        { "distance_km": "24-30", "fare_inr": 50 },
+        { "distance_km": "30+", "fare_inr": 60 }
+      ],
+      "smart_card_discount_percent": 10,
+      "notes": "Mumbai Metro distance-based fare structure (Line 1, 2A, 7, 3)"
+    }
+  },
+  "walking_and_transfers": {
+    "standard_walking_speed_mps": 1.33,
+    "default_max_walking_distance_meters": 1000,
+    "accessible_max_walking_distance_meters": 300,
+    "walk_reluctance_factor": 2.0,
+    "interchanges": [
+      {
+        "from_stop": "ANDHERI_METRO",
+        "to_stop": "ANDHERI_RAILWAY",
+        "transfer_type": "FOB_SKYWALK",
+        "walking_distance_meters": 150,
+        "typical_transfer_duration_minutes": 3.0,
+        "accessible_ramp_available": true
+      },
+      {
+        "from_stop": "GHATKOPAR_METRO",
+        "to_stop": "GHATKOPAR_RAILWAY",
+        "transfer_type": "DIRECT_FOB",
+        "walking_distance_meters": 50,
+        "typical_transfer_duration_minutes": 1.5,
+        "accessible_ramp_available": true
+      },
+      {
+        "from_stop": "GUNDAVALI_METRO_7",
+        "to_stop": "WEH_METRO_1",
+        "transfer_type": "FOOT_OVER_BRIDGE_SKYWALK",
+        "walking_distance_meters": 280,
+        "typical_transfer_duration_minutes": 4.5,
+        "accessible_ramp_available": true
+      },
+      {
+        "from_stop": "DN_NAGAR_METRO_1",
+        "to_stop": "DN_NAGAR_METRO_2A",
+        "transfer_type": "INTERCHANGE_CONCOURSE",
+        "walking_distance_meters": 90,
+        "typical_transfer_duration_minutes": 2.0,
+        "accessible_ramp_available": true
+      },
+      {
+        "from_stop": "DADAR_CENTRAL",
+        "to_stop": "DADAR_WESTERN",
+        "transfer_type": "RAILWAY_FOB",
+        "walking_distance_meters": 120,
+        "typical_transfer_duration_minutes": 3.0,
+        "accessible_ramp_available": false
+      }
+    ]
+  },
+  "agencies": [
+    { "id": "MMOPL", "name": "Mumbai Metro One Private Limited", "aliases": ["Metro One", "Mumbai Metro", "Metro 1"] },
+    { "id": "MMMOCL", "name": "Maha Mumbai Metro Operation Corporation Ltd", "aliases": ["Metro 2A", "Metro 7", "Maha Metro"] },
+    { "id": "MMRDA", "name": "Mumbai Metropolitan Region Development Authority", "aliases": ["MMRDA"] },
+    { "id": "WR", "name": "Western Railway", "aliases": ["Western Line", "WR", "Western Local"] },
+    { "id": "CR", "name": "Central Railway", "aliases": ["Central Line", "CR", "Central Local"] },
+    { "id": "BEST", "name": "Brihanmumbai Electric Supply and Transport", "aliases": ["BEST Bus", "BEST"] }
+  ],
+  "routes": [
+    {
+      "route_id": "METRO_1",
+      "route_short_name": "Line 1",
+      "route_long_name": "Blue Line (Versova - Andheri - Ghatkopar)",
+      "agency_id": "MMOPL",
+      "aliases": ["metro line 1", "line 1", "blue line", "versova ghatkopar metro", "mumbai metro 1"]
+    },
+    {
+      "route_id": "METRO_2A",
+      "route_short_name": "Line 2A",
+      "route_long_name": "Yellow Line (Dahisar East - D.N. Nagar)",
+      "agency_id": "MMMOCL",
+      "aliases": ["metro line 2a", "line 2a", "yellow line", "dahisar dn nagar metro"]
+    },
+    {
+      "route_id": "METRO_7",
+      "route_short_name": "Line 7",
+      "route_long_name": "Red Line (Dahisar East - Gundavali)",
+      "agency_id": "MMMOCL",
+      "aliases": ["metro line 7", "line 7", "red line", "dahisar gundavali metro"]
+    },
+    {
+      "route_id": "METRO_3",
+      "route_short_name": "Line 3",
+      "route_long_name": "Aqua Line (Aarey JVLR - BKC - Cuffe Parade)",
+      "agency_id": "MMRDA",
+      "aliases": ["metro line 3", "line 3", "aqua line", "underground metro"]
+    },
+    {
+      "route_id": "SUB_WESTERN",
+      "route_short_name": "Western",
+      "route_long_name": "Western Suburban Railway (Churchgate - Dahanu Road)",
+      "agency_id": "WR",
+      "aliases": ["western line", "western railway", "churchgate virar line", "western local"]
+    },
+    {
+      "route_id": "SUB_CENTRAL",
+      "route_short_name": "Central",
+      "route_long_name": "Central Suburban Railway (CSMT - Kalyan / Karjat / Kasara)",
+      "agency_id": "CR",
+      "aliases": ["central line", "central railway", "csmt kalyan line", "central local", "main line"]
+    },
+    {
+      "route_id": "SUB_HARBOUR",
+      "route_short_name": "Harbour",
+      "route_long_name": "Harbour Suburban Railway (CSMT - Panvel / Goregaon)",
+      "agency_id": "CR",
+      "aliases": ["harbour line", "harbour railway", "csmt panvel line"]
+    }
+  ],
+  "stops": [
+    {
+      "stop_id": "ANDHERI",
+      "stop_name": "Andheri",
+      "aliases": ["andheri", "andheri station", "andheri west", "andheri east", "andheri metro", "andheri railway station"],
+      "latitude": 19.1197,
+      "longitude": 72.8464,
+      "routes": ["METRO_1", "SUB_WESTERN", "SUB_HARBOUR"]
+    },
+    {
+      "stop_id": "GHATKOPAR",
+      "stop_name": "Ghatkopar",
+      "aliases": ["ghatkopar", "ghatkopar station", "ghatkopar metro", "ghatkopar railway station"],
+      "latitude": 19.0860,
+      "longitude": 72.9090,
+      "routes": ["METRO_1", "SUB_CENTRAL"]
+    },
+    {
+      "stop_id": "VERSOVA",
+      "stop_name": "Versova",
+      "aliases": ["versova", "versova metro station"],
+      "latitude": 19.1378,
+      "longitude": 72.8135,
+      "routes": ["METRO_1"]
+    },
+    {
+      "stop_id": "DADAR",
+      "stop_name": "Dadar",
+      "aliases": ["dadar", "dadar station", "dadar tt", "dadar western", "dadar central"],
+      "latitude": 19.0178,
+      "longitude": 72.8478,
+      "routes": ["SUB_WESTERN", "SUB_CENTRAL"]
+    },
+    {
+      "stop_id": "BANDRA",
+      "stop_name": "Bandra",
+      "aliases": ["bandra", "bandra station", "bandra west", "bandra terminus"],
+      "latitude": 19.0544,
+      "longitude": 72.8402,
+      "routes": ["SUB_WESTERN", "SUB_HARBOUR"]
+    },
+    {
+      "stop_id": "BKC",
+      "stop_name": "Bandra Kurla Complex",
+      "aliases": ["bkc", "bandra kurla complex", "bkc metro"],
+      "latitude": 19.0660,
+      "longitude": 72.8687,
+      "routes": ["METRO_3"]
+    },
+    {
+      "stop_id": "BORIVALI",
+      "stop_name": "Borivali",
+      "aliases": ["borivali", "borivali station", "borivali west", "borivali east"],
+      "latitude": 19.2290,
+      "longitude": 72.8574,
+      "routes": ["SUB_WESTERN"]
+    },
+    {
+      "stop_id": "CHURCHGATE",
+      "stop_name": "Churchgate",
+      "aliases": ["churchgate", "churchgate station", "churchgate terminus"],
+      "latitude": 18.9322,
+      "longitude": 72.8264,
+      "routes": ["SUB_WESTERN"]
+    },
+    {
+      "stop_id": "CSMT",
+      "stop_name": "Chhatrapati Shivaji Maharaj Terminus",
+      "aliases": ["csmt", "cst", "vt", "victoria terminus", "mumbai cst"],
+      "latitude": 18.9401,
+      "longitude": 72.8354,
+      "routes": ["SUB_CENTRAL", "SUB_HARBOUR"]
+    },
+    {
+      "stop_id": "KURLA",
+      "stop_name": "Kurla",
+      "aliases": ["kurla", "kurla station", "kurla junction"],
+      "latitude": 19.0657,
+      "longitude": 72.8794,
+      "routes": ["SUB_CENTRAL", "SUB_HARBOUR"]
+    },
+    {
+      "stop_id": "THANE",
+      "stop_name": "Thane",
+      "aliases": ["thane", "thane station"],
+      "latitude": 19.1860,
+      "longitude": 72.9759,
+      "routes": ["SUB_CENTRAL"]
+    },
+    {
+      "stop_id": "GUNDAVALI",
+      "stop_name": "Gundavali",
+      "aliases": ["gundavali", "gundavali metro station"],
+      "latitude": 19.1171,
+      "longitude": 72.8561,
+      "routes": ["METRO_7"]
+    },
+    {
+      "stop_id": "DN_NAGAR",
+      "stop_name": "D.N. Nagar",
+      "aliases": ["dn nagar", "d.n. nagar", "dn nagar metro"],
+      "latitude": 19.1256,
+      "longitude": 72.8290,
+      "routes": ["METRO_1", "METRO_2A"]
+    },
+    {
+      "stop_id": "DAHISAR_EAST",
+      "stop_name": "Dahisar East",
+      "aliases": ["dahisar east", "dahisar east metro"],
+      "latitude": 19.2558,
+      "longitude": 72.8683,
+      "routes": ["METRO_2A", "METRO_7"]
+    }
+  ]
+}

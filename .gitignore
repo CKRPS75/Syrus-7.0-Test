@@ -1,0 +1,38 @@
+# Environment and secrets (CRITICAL: Never commit API keys)
+.env
+.env*.local
+*.key
+*.pem
+
+# Generated PDFs and PDF build scripts
+*.pdf
+generate_pdf_docs.py
+
+# Local testing and scratch scripts
+test_llm_connection.py
+test_live_llm_pipeline.py
+
+# Python bytecode & runtime cache
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+*.log
+
+# IDE, editor & OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Virtual environments
+venv/
+env/
+.venv/
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
