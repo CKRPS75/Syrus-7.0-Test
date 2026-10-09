@@ -12,7 +12,7 @@ export interface TravellerConstraints {
 }
 
 export interface JourneyLeg {
-  mode: 'WALK' | 'BUS' | 'METRO' | 'SUBWAY' | 'RAIL';
+  mode: 'WALK' | 'BUS' | 'METRO' | 'SUBWAY' | 'RAIL' | 'TRAIN';
   lineName?: string;
   fromName: string;
   toName: string;

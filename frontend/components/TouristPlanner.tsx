@@ -128,15 +128,25 @@ export default function TouristPlanner() {
   // Convert tour legs to JourneyLeg format for Carbon Calculator
   const tourCarbonMetrics = plan
     ? computeCarbonMetrics(
-        plan.legs.map(l => ({
-          fromName: l.from_stop_id,
-          toName: l.to_stop_id,
-          mode: (l.mode === 'RAIL' ? 'METRO' : 'BUS') as 'METRO' | 'BUS',
-          durationMin: l.duration_min,
-          distanceMeters: Math.round(l.duration_min * 350), // realistic transit distance approximation
-          fare: l.fare_inr,
-          lineName: l.bus_or_train_number
-        })),
+        plan.legs.map(l => {
+          const mode: JourneyLeg['mode'] =
+            l.mode === 'RAIL'
+              ? 'RAIL'
+              : l.mode === 'METRO'
+                ? 'METRO'
+                : l.mode === 'WALK'
+                  ? 'WALK'
+                  : 'BUS';
+
+          return {
+            fromName: l.from_stop,
+            toName: l.to_stop,
+            mode,
+            durationMin: l.duration_min,
+            distanceMeters: l.distance_m,
+            coordinates: []
+          };
+        }),
         plan.total_transit_fare_inr
       )
     : undefined;

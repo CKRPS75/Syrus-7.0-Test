@@ -1,0 +1,182 @@
+{
+  "city": "Mumbai",
+  "currency": "INR",
+  "currencySymbol": "₹",
+  "verifiedAt": "2026-10-09",
+  "coverage": {
+    "status": "partial",
+    "note": "This file records the routes represented in this project and fares verified from operator sources. It is not a complete inventory of every Mumbai BEST bus route. A null fare means no fare amount was verified for that route; it must not be treated as free."
+  },
+  "sources": {
+    "best": {
+      "operator": "Brihanmumbai Electric Supply and Transport (BEST)",
+      "url": "https://bestundertaking.com/",
+      "fareDataStatus": "unavailable",
+      "note": "The operator website was reachable, but a current route-wise public fare tariff could not be verified from the available official pages."
+    },
+    "suburbanRail": {
+      "operator": "Indian Railways",
+      "url": "https://www.indianrail.gov.in/enquiry/FARE/FareEnquiry.html?locale=en",
+      "fareDataStatus": "unavailable",
+      "note": "The official fare enquiry is journey-specific; a current Mumbai suburban station-pair tariff was not verified for these corridors."
+    },
+    "metroOne": {
+      "operator": "Mumbai Metro One",
+      "url": "https://www.reliancemumbaimetro.com/",
+      "fareDataStatus": "unavailable",
+      "note": "No route-wise fare tariff was verified from the operator pages checked."
+    },
+    "metro2A7": {
+      "operator": "Maha Mumbai Metro Operation Corporation Ltd (MMMOCL)",
+      "url": "https://www.mmmocl.co.in/fare_table",
+      "fareDataStatus": "journey_calculator",
+      "note": "The official fare table calculates a fare after origin, destination, and ticket quantity are selected."
+    },
+    "metro3": {
+      "operator": "Mumbai Metro Rail Corporation Ltd (MMRCL)",
+      "url": "https://mmrcl.com/en/project/mumbai-metro-line-3/fares",
+      "fareDataStatus": "unavailable",
+      "note": "The official fares page was reachable, but did not expose a verifiable fare tariff in the content available."
+    }
+  },
+  "routes": [
+    {
+      "routeId": "BEST_BUS_NETWORK",
+      "mode": "BUS",
+      "operator": "BEST",
+      "routeName": "BEST Mumbai bus network",
+      "routeInventoryStatus": "incomplete",
+      "fareStatus": "unavailable",
+      "fareInr": null,
+      "fareSource": "best",
+      "note": "The repository does not include the full BEST route inventory, and no current official route-wise fare was verified."
+    },
+    {
+      "routeId": "BUS_365",
+      "mode": "BUS",
+      "operator": "BEST",
+      "routeName": "Bus 365",
+      "routeInventoryStatus": "project_example",
+      "fareStatus": "unavailable",
+      "fareInr": null,
+      "fareSource": "best",
+      "note": "Present in the frontend mock journey; fare not verified."
+    },
+    {
+      "routeId": "BUS_C505",
+      "mode": "BUS",
+      "operator": "BEST",
+      "routeName": "AC Fast Bus C-505",
+      "routeInventoryStatus": "project_example",
+      "fareStatus": "unavailable",
+      "fareInr": null,
+      "fareSource": "best",
+      "note": "Present in the frontend mock journey; fare not verified."
+    },
+    {
+      "routeId": "BUS_340",
+      "mode": "BUS",
+      "operator": "BEST",
+      "routeName": "Western Express Bus 340",
+      "routeInventoryStatus": "project_example",
+      "fareStatus": "unavailable",
+      "fareInr": null,
+      "fareSource": "best",
+      "note": "Present in the frontend mock journey; fare not verified."
+    },
+    {
+      "routeId": "SUB_WESTERN",
+      "mode": "LOCAL_RAIL",
+      "operator": "Western Railway",
+      "routeName": "Western Suburban Railway (Churchgate - Virar)",
+      "routeInventoryStatus": "project_corridor",
+      "fareStatus": "journey_fare_not_verified",
+      "fareInr": null,
+      "fareSource": "suburbanRail",
+      "fareBasis": "Origin-destination, class, and ticket type",
+      "note": "A single fixed fare does not represent all journeys on this corridor."
+    },
+    {
+      "routeId": "SUB_CENTRAL",
+      "mode": "LOCAL_RAIL",
+      "operator": "Central Railway",
+      "routeName": "Central Suburban Railway (CSMT - Kalyan)",
+      "routeInventoryStatus": "project_corridor",
+      "fareStatus": "journey_fare_not_verified",
+      "fareInr": null,
+      "fareSource": "suburbanRail",
+      "fareBasis": "Origin-destination, class, and ticket type",
+      "note": "A single fixed fare does not represent all journeys on this corridor."
+    },
+    {
+      "routeId": "SUB_HARBOUR",
+      "mode": "LOCAL_RAIL",
+      "operator": "Central Railway",
+      "routeName": "Harbour Suburban Railway (CSMT - Panvel)",
+      "routeInventoryStatus": "project_corridor",
+      "fareStatus": "journey_fare_not_verified",
+      "fareInr": null,
+      "fareSource": "suburbanRail",
+      "fareBasis": "Origin-destination, class, and ticket type",
+      "note": "A single fixed fare does not represent all journeys on this corridor."
+    },
+    {
+      "routeId": "METRO_1",
+      "mode": "METRO",
+      "operator": "Mumbai Metro One",
+      "routeName": "Blue Line (Versova - Ghatkopar)",
+      "routeInventoryStatus": "project_corridor",
+      "fareStatus": "journey_fare_not_verified",
+      "fareInr": null,
+      "fareSource": "metroOne",
+      "fareBasis": "Origin-destination",
+      "note": "A single fixed fare does not represent all journeys on this line."
+    },
+    {
+      "routeId": "METRO_2A",
+      "mode": "METRO",
+      "operator": "MMMOCL",
+      "routeName": "Yellow Line (Dahisar East - D.N. Nagar)",
+      "routeInventoryStatus": "project_corridor",
+      "fareStatus": "available_from_official_journey_calculator",
+      "fareInr": null,
+      "fareSource": "metro2A7",
+      "fareBasis": "Origin-destination, ticket quantity, and single/return ticket selection",
+      "note": "The operator publishes journey-calculated fares rather than one fare for the entire line."
+    },
+    {
+      "routeId": "METRO_7",
+      "mode": "METRO",
+      "operator": "MMMOCL",
+      "routeName": "Red Line (Dahisar East - Gundavali)",
+      "routeInventoryStatus": "project_corridor",
+      "fareStatus": "available_from_official_journey_calculator",
+      "fareInr": null,
+      "fareSource": "metro2A7",
+      "fareBasis": "Origin-destination, ticket quantity, and single/return ticket selection",
+      "verifiedJourneyExamples": [
+        {
+          "from": "Gundavali",
+          "to": "Mogra",
+          "ticketType": "single",
+          "ticketCount": 1,
+          "fareInr": 10.0,
+          "source": "metro2A7"
+        }
+      ],
+      "note": "The example is an observed journey fare, not a flat fare for the entire line."
+    },
+    {
+      "routeId": "METRO_3",
+      "mode": "METRO",
+      "operator": "MMRCL",
+      "routeName": "Aqua Line (Aarey JVLR - BKC)",
+      "routeInventoryStatus": "project_corridor",
+      "fareStatus": "journey_fare_not_verified",
+      "fareInr": null,
+      "fareSource": "metro3",
+      "fareBasis": "Origin-destination",
+      "note": "A single fixed fare does not represent all journeys on this line."
+    }
+  ]
+}
