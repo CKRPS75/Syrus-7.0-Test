@@ -1,0 +1,14 @@
+{
+  "currency": "INR",
+  "bus": {
+    "base_fare": 6.0,
+    "per_km_rate": 2.0
+  },
+  "metro": {
+    "base_fare": 10.0,
+    "per_km_rate": 3.5
+  },
+  "walk": {
+    "fare": 0.0
+  }
+}
