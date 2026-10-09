@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef } from 'react';
-import * as maplibregl from 'maplibre-gl';
+import { Map, LngLatBounds } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { JourneyLeg } from '../types';
 
@@ -11,22 +11,20 @@ interface MapViewProps {
 
 export default function MapView({ legs }: MapViewProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
-  const mapInstance = useRef<maplibregl.Map | null>(null);
+  const mapInstance = useRef<Map | null>(null);
 
   useEffect(() => {
     if (!mapContainer.current) return;
 
     if (!mapInstance.current) {
-      mapInstance.current = new maplibregl.Map({
+      mapInstance.current = new Map({
         container: mapContainer.current,
         style: {
           version: 8,
           sources: {
             'osm-tiles': {
               type: 'raster',
-              tiles: [
-                'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
-              ],
+              tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
               tileSize: 256,
               attribution: '&copy; OpenStreetMap contributors',
             },
@@ -64,7 +62,6 @@ export default function MapView({ legs }: MapViewProps) {
                 : leg.mode === 'BUS'
                 ? '#16a34a'
                 : '#64748b',
-            dash: leg.mode === 'WALK' ? [2, 2] : [1, 0],
           },
           geometry: {
             type: 'LineString' as const,
@@ -77,11 +74,11 @@ export default function MapView({ legs }: MapViewProps) {
         features: validFeatures,
       };
 
-      const source = map.getSource('trustroute-paths') as maplibregl.GeoJSONSource;
+      const source = map.getSource('trustroute-paths') as any;
 
-      if (source) {
+      if (source && typeof source.setData === 'function') {
         source.setData(geojsonData);
-      } else {
+      } else if (!source) {
         map.addSource('trustroute-paths', {
           type: 'geojson',
           data: geojsonData,
@@ -102,12 +99,11 @@ export default function MapView({ legs }: MapViewProps) {
         });
       }
 
-      // Fit bounds cleanly
       const allCoords = legs.flatMap((l) => l.coordinates);
       if (allCoords.length > 0) {
         const bounds = allCoords.reduce(
           (b, coord) => b.extend(coord),
-          new maplibregl.LngLatBounds(allCoords[0], allCoords[0])
+          new LngLatBounds(allCoords[0], allCoords[0])
         );
         map.fitBounds(bounds, { padding: 45, maxZoom: 14 });
       }

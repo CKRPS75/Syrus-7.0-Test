@@ -31,7 +31,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 
-// Verified Greater Mumbai Dataset Hubs
+// Verified Mumbai Dataset Hubs
 const MUMBAI_DATASET_HUBS = [
   'Dadar',
   'Andheri',
@@ -47,6 +47,88 @@ const MUMBAI_DATASET_HUBS = [
   'Colaba',
   'Versova',
   'BKC'
+];
+
+// Robust Fallback Tourist Attractions
+const FALLBACK_ATTRACTIONS: TouristAttraction[] = [
+  {
+    id: 'GATEWAY_OF_INDIA',
+    name: 'Gateway of India',
+    category: 'Heritage',
+    lat: 18.922,
+    lng: 72.8347,
+    typical_dwell_minutes: 45,
+    open_time: '06:00',
+    close_time: '23:00',
+    fare_inr: 0,
+    priority: 'HIGH',
+    description: 'Iconic 20th-century basalt arch monument on Mumbai Harbour.'
+  },
+  {
+    id: 'CSMVS_MUSEUM',
+    name: 'CSMVS Museum (Prince of Wales)',
+    category: 'Culture & Art',
+    lat: 18.9269,
+    lng: 72.8327,
+    typical_dwell_minutes: 60,
+    open_time: '10:15',
+    close_time: '18:00',
+    fare_inr: 150,
+    priority: 'HIGH',
+    description: 'Premier art and history museum in Indo-Saracenic architecture.'
+  },
+  {
+    id: 'JEHANGIR_ART_GALLERY',
+    name: 'Jehangir Art Gallery',
+    category: 'Art',
+    lat: 18.9275,
+    lng: 72.8317,
+    typical_dwell_minutes: 40,
+    open_time: '11:00',
+    close_time: '19:00',
+    fare_inr: 0,
+    priority: 'MEDIUM',
+    description: 'Foremost modern Indian art gallery in Kala Ghoda.'
+  },
+  {
+    id: 'MARINE_DRIVE',
+    name: 'Marine Drive & Chowpatty',
+    category: 'Scenic',
+    lat: 18.9432,
+    lng: 72.823,
+    typical_dwell_minutes: 60,
+    open_time: '00:00',
+    close_time: '23:59',
+    fare_inr: 0,
+    priority: 'HIGH',
+    description: "The Queen's Necklace coastal promenade along the Arabian Sea."
+  },
+  {
+    id: 'SIDDHIVINAYAK_TEMPLE',
+    name: 'Siddhivinayak Temple',
+    category: 'Heritage',
+    lat: 19.0169,
+    lng: 72.8304,
+    typical_dwell_minutes: 45,
+    open_time: '05:30',
+    close_time: '22:00',
+    fare_inr: 0,
+    priority: 'MEDIUM',
+    description: 'Historic temple dedicated to Lord Ganesha in Prabhadevi.'
+  },
+  {
+    id: 'BANDRA_BANDSTAND',
+    name: 'Bandra Bandstand & Fort',
+    category: 'Scenic',
+    lat: 19.0416,
+    lng: 72.8197,
+    typical_dwell_minutes: 50,
+    open_time: '06:00',
+    close_time: '21:00',
+    fare_inr: 0,
+    priority: 'MEDIUM',
+    description: 'Rocky seaside walkway and Portuguese fort ruins.'
+  }
 ];
 
 export default function TouristPlanner() {
@@ -65,16 +147,23 @@ export default function TouristPlanner() {
   useEffect(() => {
     async function load() {
       try {
-        const list = await getTouristAttractions();
+        const data = await getTouristAttractions();
+        const list = data && data.length > 0 ? data : FALLBACK_ATTRACTIONS;
+        
         setAttractions(list);
-        const defaults = list.filter(a =>
+
+        const defaults = list.filter((a) =>
           ['GATEWAY_OF_INDIA', 'CSMVS_MUSEUM', 'JEHANGIR_ART_GALLERY', 'MARINE_DRIVE'].includes(a.id)
         );
-        setSelectedStops(defaults);
+
+        setSelectedStops(defaults.length > 0 ? defaults : list.slice(0, 4));
       } catch (e) {
-        console.error('Error loading attractions', e);
+        console.warn('Backend unavailable, using Mumbai fallback attractions:', e);
+        setAttractions(FALLBACK_ATTRACTIONS);
+        setSelectedStops(FALLBACK_ATTRACTIONS.slice(0, 4));
       }
     }
+
     load();
   }, []);
 
