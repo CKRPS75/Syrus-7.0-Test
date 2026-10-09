@@ -18,7 +18,8 @@ def create_journey(request: JourneyRequest):
         journeys = plan_journey(
             origin=request.origin,
             destination=request.destination,
-            departure=request.departure
+            departure=request.departure,
+            allowed_modes=request.allowed_modes
         )
 
         results = []

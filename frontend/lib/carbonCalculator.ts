@@ -4,6 +4,9 @@ import { JourneyLeg, CarbonMetrics } from '../types';
 const EMISSION_FACTORS_G_PER_KM: Record<string, number> = {
   WALK: 0,
   METRO: 25,
+  SUBWAY: 25,
+  TRAIN: 25,
+  RAIL: 25,
   BUS: 45,
 };
 

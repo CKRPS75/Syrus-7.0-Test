@@ -1,4 +1,5 @@
 export type DisruptionStatus = 'IGNORE' | 'WATCH' | 'CONFIRMED' | 'RESOLVED';
+export type TransitMode = 'BUS' | 'METRO' | 'TRAIN' | 'WALK';
 
 export interface TravellerConstraints {
   origin: string;
@@ -8,7 +9,7 @@ export interface TravellerConstraints {
   budget?: number;
   maxWalkingMeters?: number;
   accessibilityRequired: boolean;
-  allowedModes: ('BUS' | 'METRO' | 'WALK')[];
+  allowedModes: TransitMode[];
 }
 
 export interface JourneyLeg {
@@ -19,6 +20,12 @@ export interface JourneyLeg {
   durationMin: number;
   distanceMeters: number;
   coordinates: [number, number][]; // [lng, lat]
+  stops?: JourneyStop[];
+}
+
+export interface JourneyStop {
+  name: string;
+  coordinates: [number, number]; // [lng, lat]
 }
 
 export interface CarbonMetrics {

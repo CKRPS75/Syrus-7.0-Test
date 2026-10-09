@@ -42,11 +42,34 @@ def resolve_coords(location_str: str) -> tuple:
     # Default fallback to Mumbai center
     return (19.0760, 72.8777)
 
+
+def resolve_known_coords(location_str: str) -> tuple | None:
+    loc_clean = location_str.upper().strip()
+    if not loc_clean:
+        return None
+    for key, coords in MUMBAI_GEOCODE.items():
+        if key in loc_clean or loc_clean in key:
+            return coords
+    return None
+
+
 OTP_URL = "http://localhost:8080/otp/routers/default/index/graphql"
 
 def query_otp_or_simulate(origin: str, dest: str, dep_time: str, req: JourneyRequest) -> List[dict]:
     fromLat, fromLon = resolve_coords(origin)
     toLat, toLon = resolve_coords(dest)
+    allowed_modes = req.allowed_modes
+    if allowed_modes is None:
+        allowed_modes = ["BUS", "METRO", "WALK"]
+    otp_modes = {
+        "BUS": "BUS",
+        "METRO": "SUBWAY",
+        "TRAIN": "RAIL",
+        "WALK": "WALK",
+    }
+    selected_otp_modes = [otp_modes[mode] for mode in allowed_modes]
+    if not selected_otp_modes:
+        return []
 
     date_part = dep_time.split("T")[0] if "T" in dep_time else datetime.now().strftime("%Y-%m-%d")
     time_part = dep_time.split("T")[1] if "T" in dep_time else "17:00:00"
@@ -55,6 +78,9 @@ def query_otp_or_simulate(origin: str, dest: str, dep_time: str, req: JourneyReq
 
     # Try querying OTP if running
     try:
+        transport_modes = ", ".join(
+            f"{{ mode: {mode} }}" for mode in selected_otp_modes
+        )
         query = """
         query TestJourney($fromLat: Float!, $fromLon: Float!, $toLat: Float!, $toLon: Float!, $date: String!, $time: String!) {
           plan(
@@ -63,7 +89,7 @@ def query_otp_or_simulate(origin: str, dest: str, dep_time: str, req: JourneyReq
             date: $date
             time: $time
             arriveBy: false
-            transportModes: [{ mode: WALK }, { mode: TRANSIT }]
+            transportModes: [__TRANSPORT_MODES__]
             numItineraries: 3
           ) {
             itineraries {
@@ -78,12 +104,14 @@ def query_otp_or_simulate(origin: str, dest: str, dep_time: str, req: JourneyReq
                 distance
                 from { name lat lon }
                 to { name lat lon }
+                intermediatePlaces { name lat lon }
                 route { shortName longName }
               }
             }
           }
         }
         """
+        query = query.replace("__TRANSPORT_MODES__", transport_modes)
         resp = requests.post(OTP_URL, json={"query": query, "variables": {
             "fromLat": fromLat, "fromLon": fromLon, "toLat": toLat, "toLon": toLon,
             "date": date_part, "time": time_part
@@ -98,13 +126,41 @@ def query_otp_or_simulate(origin: str, dest: str, dep_time: str, req: JourneyReq
                     legs = []
                     for l in itin["legs"]:
                         route_name = l["route"]["shortName"] if l.get("route") else None
+                        stops = []
+                        for stop in [
+                            l.get("from"),
+                            *(l.get("intermediatePlaces") or []),
+                            l.get("to"),
+                        ]:
+                            if (
+                                stop
+                                and stop.get("name")
+                                and stop.get("lat") is not None
+                                and stop.get("lon") is not None
+                            ):
+                                coordinates = [stop["lon"], stop["lat"]]
+                                if not stops or stops[-1]["coordinates"] != coordinates:
+                                    stops.append({
+                                        "name": stop["name"],
+                                        "coordinates": coordinates,
+                                    })
                         legs.append({
                             "mode": l["mode"],
                             "route_name": route_name,
                             "from_place": l["from"]["name"],
                             "to_place": l["to"]["name"],
                             "duration_min": round(l["duration"] / 60),
-                            "distance_m": round(l["distance"])
+                            "distance_m": round(l["distance"]),
+                            "coordinates": [
+                                [l["from"]["lon"], l["from"]["lat"]],
+                                [l["to"]["lon"], l["to"]["lat"]],
+                            ] if (
+                                l["from"].get("lat") is not None
+                                and l["from"].get("lon") is not None
+                                and l["to"].get("lat") is not None
+                                and l["to"].get("lon") is not None
+                            ) else [],
+                            "stops": stops,
                         })
                     fare = 20.0 + (len([l for l in legs if l["mode"] != "WALK"]) - 1) * 10.0
                     out.append({
@@ -123,6 +179,10 @@ def query_otp_or_simulate(origin: str, dest: str, dep_time: str, req: JourneyReq
     except Exception:
         pass
 
+    # The local simulation only represents bus, metro and walking journeys.
+    if not {"BUS", "METRO", "WALK"}.issubset(set(allowed_modes)):
+        return []
+
     # Fallback to realistic Multi-modal Simulation (Chembur -> Andheri etc.)
     d_lat = toLat - fromLat
     d_lon = toLon - fromLon
@@ -135,6 +195,22 @@ def query_otp_or_simulate(origin: str, dest: str, dep_time: str, req: JourneyReq
         {"mode": "SUBWAY", "route_name": "Metro Line 1", "from_place": "Ghatkopar Metro", "to_place": f"{dest} Metro", "duration_min": 18, "distance_m": int(dist_km * 550)},
         {"mode": "WALK", "route_name": "Walk", "from_place": f"{dest} Metro", "to_place": dest, "duration_min": 6, "distance_m": 420}
     ]
+    for leg in legs:
+        from_coords = resolve_known_coords(leg["from_place"])
+        to_coords = resolve_known_coords(leg["to_place"])
+        leg["coordinates"] = (
+            [[from_coords[1], from_coords[0]], [to_coords[1], to_coords[0]]]
+            if from_coords is not None and to_coords is not None
+            else []
+        )
+        leg["stops"] = (
+            [
+                {"name": leg["from_place"], "coordinates": [from_coords[1], from_coords[0]]},
+                {"name": leg["to_place"], "coordinates": [to_coords[1], to_coords[0]]},
+            ]
+            if from_coords is not None and to_coords is not None
+            else []
+        )
 
     total_dur_min = sum(l["duration_min"] for l in legs)
     fare = 45.0 # ₹15 bus + ₹30 metro

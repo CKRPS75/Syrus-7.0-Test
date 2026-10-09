@@ -136,8 +136,22 @@ def _leg_sequence_signature(legs: list[JourneyLeg]) -> tuple[tuple[str, ...], ..
 def plan_journey(
     origin: str,
     destination: str,
-    departure: str
+    departure: str,
+    allowed_modes: list[str] | None = None
 ) -> list[Journey]:
+
+    otp_modes = {
+        "BUS": "BUS",
+        "METRO": "SUBWAY",
+        "TRAIN": "RAIL",
+        "WALK": "WALK",
+    }
+    selected_modes = allowed_modes if allowed_modes is not None else list(otp_modes)
+    transport_modes = ", ".join(
+        f"{{ mode: {otp_modes[mode]} }}" for mode in selected_modes
+    )
+    if not selected_modes:
+        return []
 
     query = """
     query TestJourney(
@@ -160,10 +174,7 @@ def plan_journey(
         date: $date
         time: $time
         arriveBy: false
-        transportModes: [
-          { mode: WALK }
-          { mode: TRANSIT }
-        ]
+        transportModes: [__TRANSPORT_MODES__]
         numItineraries: 3
       ) {
         itineraries {
@@ -213,6 +224,7 @@ def plan_journey(
       }
     }
     """
+    query = query.replace("__TRANSPORT_MODES__", transport_modes)
 
     # Resolve coordinates dynamically from reference data, defaulting to Dadar and Kurla
     from_lat, from_lon = resolve_coordinates(origin, fallback_lat=19.0178, fallback_lon=72.8478)

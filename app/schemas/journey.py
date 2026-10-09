@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Literal
 from pydantic import BaseModel, ConfigDict, Field
 from app.schemas.traveller import TravellerResponse
 from app.schemas.itinerary import ItineraryResponse
@@ -17,6 +17,7 @@ class JourneyPlanRequest(BaseModel):
     origin: LocationPoint
     destination: LocationPoint
     departure_time: Optional[datetime] = None
+    allowed_modes: List[Literal["BUS", "METRO", "TRAIN", "WALK"]] | None = None
 
 
 class JourneyResponse(BaseModel):
@@ -31,6 +32,20 @@ class JourneyResponse(BaseModel):
     updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class JourneyRequest(BaseModel):
+    origin: str
+    destination: str
+    departure: str
+    deadline: str | None = None
+    budget: float | None = None
+    max_walking: int | None = None
+    accessibility_required: bool = False
+    allowed_modes: List[Literal["BUS", "METRO", "TRAIN", "WALK"]] | None = None
+    forbidden_modes: List[str] = Field(default_factory=list)
+    transfer_tolerance: int | None = None
+    risk_tolerance: str = "MEDIUM"
 
 
 class JourneyDetailResponse(JourneyResponse):

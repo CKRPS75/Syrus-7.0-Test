@@ -3,11 +3,120 @@ import {
   JourneyPlanResponse,
   DisruptionAlert,
   TouristAttraction,
-  TourPlanResponse
+  TourPlanResponse,
+  JourneyStop,
 } from '../types';
 import { computeCarbonMetrics } from './carbonCalculator';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+
+interface BackendJourneyLeg {
+  mode: JourneyPlanResponse['legs'][number]['mode'];
+  route_name?: string | null;
+  from_place: string;
+  to_place: string;
+  duration_min: number;
+  distance_m: number;
+  coordinates?: unknown;
+  stops?: unknown;
+}
+
+interface BackendJourney {
+  journey_id?: string;
+  origin: string;
+  destination: string;
+  departure: string;
+  arrival: string;
+  fare: number;
+  walking_m: number;
+  transfers: number;
+  legs: BackendJourneyLeg[];
+}
+
+const journeyLegModes: JourneyPlanResponse['legs'][number]['mode'][] = [
+  'WALK',
+  'BUS',
+  'METRO',
+  'SUBWAY',
+  'RAIL',
+  'TRAIN',
+];
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function isBackendJourneyLeg(value: unknown): value is BackendJourneyLeg {
+  return (
+    isRecord(value) &&
+    typeof value.mode === 'string' &&
+    journeyLegModes.includes(value.mode as BackendJourneyLeg['mode']) &&
+    typeof value.from_place === 'string' &&
+    typeof value.to_place === 'string' &&
+    typeof value.duration_min === 'number' &&
+    typeof value.distance_m === 'number' &&
+    (value.route_name === undefined || value.route_name === null || typeof value.route_name === 'string')
+  );
+}
+
+function isBackendJourney(value: unknown): value is BackendJourney {
+  return (
+    isRecord(value) &&
+    typeof value.origin === 'string' &&
+    typeof value.destination === 'string' &&
+    typeof value.departure === 'string' &&
+    typeof value.arrival === 'string' &&
+    typeof value.fare === 'number' &&
+    typeof value.walking_m === 'number' &&
+    typeof value.transfers === 'number' &&
+    Array.isArray(value.legs) &&
+    value.legs.every(isBackendJourneyLeg)
+  );
+}
+
+function getJourneyResponse(data: unknown): BackendJourney {
+  if (!isRecord(data)) throw new Error('Journey planning returned an invalid response.');
+
+  let journey: unknown = data.journey;
+  if (!isRecord(journey) && Array.isArray(data.journeys)) {
+    const firstResult = data.journeys[0];
+    journey = isRecord(firstResult) && 'journey' in firstResult
+      ? firstResult.journey
+      : firstResult;
+  }
+
+  if (!isBackendJourney(journey)) {
+    throw new Error('Journey planning returned no usable route.');
+  }
+
+  return journey;
+}
+
+function getCoordinates(coordinates: unknown): [number, number][] {
+  if (!Array.isArray(coordinates)) return [];
+  return coordinates.filter(
+    (coordinate): coordinate is [number, number] =>
+      Array.isArray(coordinate) &&
+      coordinate.length === 2 &&
+      typeof coordinate[0] === 'number' &&
+      Number.isFinite(coordinate[0]) &&
+      coordinate[0] >= -180 &&
+      coordinate[0] <= 180 &&
+      typeof coordinate[1] === 'number' &&
+      Number.isFinite(coordinate[1]) &&
+      coordinate[1] >= -90 &&
+      coordinate[1] <= 90,
+  );
+}
+
+function getStops(stops: unknown): JourneyStop[] {
+  if (!Array.isArray(stops)) return [];
+  return stops.flatMap((stop): JourneyStop[] => {
+    if (!isRecord(stop) || typeof stop.name !== 'string') return [];
+    const [coordinates] = getCoordinates([stop.coordinates]);
+    return coordinates ? [{ name: stop.name, coordinates }] : [];
+  });
+}
 
 export async function fetchBaseJourney(constraints: TravellerConstraints): Promise<JourneyPlanResponse> {
   const payload = {
@@ -18,6 +127,7 @@ export async function fetchBaseJourney(constraints: TravellerConstraints): Promi
     budget: constraints.budget,
     max_walking: constraints.maxWalkingMeters,
     accessibility_required: constraints.accessibilityRequired,
+    allowed_modes: constraints.allowedModes,
     forbidden_modes: []
   };
 
@@ -31,17 +141,18 @@ export async function fetchBaseJourney(constraints: TravellerConstraints): Promi
     throw new Error(`Journey planning failed: ${res.statusText}`);
   }
 
-  const data = await res.json();
-  const j = data.journey;
+  const data: unknown = await res.json();
+  const j = getJourneyResponse(data);
 
-  const legs = j.legs.map((l: any) => ({
+  const legs = j.legs.map((l) => ({
     mode: l.mode,
-    lineName: l.route_name,
+    lineName: l.route_name || undefined,
     fromName: l.from_place,
     toName: l.to_place,
     durationMin: l.duration_min,
     distanceMeters: l.distance_m,
-    coordinates: [[72.8467, 19.1205], [72.8569, 19.1158]]
+    coordinates: getCoordinates(l.coordinates),
+    stops: getStops(l.stops),
   }));
 
   const carbonMetrics = computeCarbonMetrics(legs, j.fare);
@@ -92,6 +203,61 @@ export async function fetchReplanProposal(
   }
 
   return await res.json();
+}
+
+export interface TransitAnomalyReport {
+  mode: 'METRO' | 'BUS' | 'RAIL';
+  category: string;
+  route: string;
+  location: string;
+  severity: 'LOW' | 'MEDIUM' | 'HIGH';
+  description: string;
+  accessibilityImpact: boolean;
+}
+
+export interface TransitAnomalyResponse {
+  event_id: string;
+  status: 'IGNORE' | 'WATCH' | 'CONFIRMED';
+  confidence_score: number;
+  severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'UNKNOWN';
+  location?: string | null;
+}
+
+export async function submitTransitAnomaly(
+  report: TransitAnomalyReport,
+): Promise<TransitAnomalyResponse> {
+  const res = await fetch(`${API_BASE_URL}/evidence/process`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      source_id: `crowd-report-${crypto.randomUUID()}`,
+      source_type: 'crowd',
+      text: [
+        `Transit mode: ${report.mode}.`,
+        `Incident category: ${report.category}.`,
+        `Route: ${report.route}.`,
+        `Station or location: ${report.location}.`,
+        `Severity: ${report.severity}.`,
+        `Wheelchair or step-free access affected: ${report.accessibilityImpact ? 'yes' : 'no'}.`,
+        `Ground report: ${report.description}`,
+      ].join(' '),
+      timestamp: new Date().toISOString(),
+      metadata: {
+        transit_mode: report.mode,
+        incident_category: report.category,
+        route: report.route,
+        location: report.location,
+        severity: report.severity,
+        accessibility_impact: report.accessibilityImpact,
+      },
+    }),
+  });
+
+  if (!res.ok) {
+    throw new Error('The Trust Engine could not accept your report. Please try again.');
+  }
+
+  return res.json() as Promise<TransitAnomalyResponse>;
 }
 
 export async function confirmRoute(proposalId: string, accepted: boolean): Promise<any> {

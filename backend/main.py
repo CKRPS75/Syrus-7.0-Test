@@ -13,6 +13,16 @@ from backend.api.journey import router as journey_router
 from backend.api.replan import router as replan_router
 from backend.api.confirm import router as confirm_router
 from backend.api.tourist import router as tourist_router
+from backend.api.auth import router as auth_router
+
+configured_origins = [
+    origin.strip()
+    for origin in os.getenv(
+        "TRUSTROUTE_CORS_ORIGINS",
+        "http://localhost:3000,http://127.0.0.1:3000",
+    ).split(",")
+    if origin.strip()
+]
 
 app = FastAPI(
     title="TrustRoute Master API",
@@ -27,7 +37,7 @@ app = FastAPI(
 # CORS setup for Next.js frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=configured_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -39,6 +49,7 @@ app.include_router(replan_router)
 app.include_router(confirm_router)
 app.include_router(evidence_router)
 app.include_router(tourist_router)
+app.include_router(auth_router)
 
 @app.get("/", tags=["Health"])
 async def root():
@@ -55,7 +66,12 @@ async def root():
             "confirm_route": "POST /confirm",
             "tourist_attractions": "GET /tourist/attractions",
             "plan_tour": "POST /tourist/plan",
-            "replan_tour": "POST /tourist/replan"
+            "replan_tour": "POST /tourist/replan",
+            "register": "POST /auth/register",
+            "login": "POST /auth/login",
+            "current_user": "GET /auth/me",
+            "logout": "POST /auth/logout",
+            "password_reset": "POST /auth/reset (not available until email is configured)"
         }
     }
 

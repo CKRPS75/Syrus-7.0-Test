@@ -1,14 +1,16 @@
 'use client';
 
 import React, { useState } from 'react';
-import { TravellerConstraints } from '../types';
-import { Search } from 'lucide-react';
+import { TravellerConstraints, TransitMode } from '../types';
+import { LoaderCircle, Search } from 'lucide-react';
 
 interface TravellerFormProps {
   onSubmit: (constraints: TravellerConstraints) => void;
+  isSubmitting?: boolean;
+  submitError?: string;
 }
 
-export default function TravellerForm({ onSubmit }: TravellerFormProps) {
+export default function TravellerForm({ onSubmit, isSubmitting = false, submitError }: TravellerFormProps) {
   const [origin, setOrigin] = useState('Chembur');
   const [destination, setDestination] = useState('Andheri');
   const [departureTime, setDepartureTime] = useState('17:00');
@@ -16,13 +18,14 @@ export default function TravellerForm({ onSubmit }: TravellerFormProps) {
   const [budget, setBudget] = useState(80);
   const [maxWalkingMeters, setMaxWalkingMeters] = useState(1000);
   const [accessibilityRequired, setAccessibilityRequired] = useState(false);
-  const [allowedModes, setAllowedModes] = useState<('BUS' | 'METRO' | 'WALK')[]>([
+  const [allowedModes, setAllowedModes] = useState<TransitMode[]>([
     'BUS',
     'METRO',
+    'TRAIN',
     'WALK',
   ]);
 
-  const toggleMode = (mode: 'BUS' | 'METRO' | 'WALK') => {
+  const toggleMode = (mode: TransitMode) => {
     setAllowedModes((prev) =>
       prev.includes(mode) ? prev.filter((m) => m !== mode) : [...prev, mode]
     );
@@ -125,12 +128,13 @@ export default function TravellerForm({ onSubmit }: TravellerFormProps) {
         <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-2">
           Permitted Transit Modes
         </label>
-        <div className="flex gap-2">
-          {(['BUS', 'METRO', 'WALK'] as const).map((mode) => (
+        <div className="flex flex-wrap gap-2">
+          {(['BUS', 'METRO', 'TRAIN', 'WALK'] as const).map((mode) => (
             <button
               type="button"
               key={mode}
               onClick={() => toggleMode(mode)}
+              aria-pressed={allowedModes.includes(mode)}
               className={`px-4 py-2 rounded-xl font-bold transition shadow-sm ${
                 allowedModes.includes(mode)
                   ? 'bg-indigo-600 text-white'
@@ -156,12 +160,19 @@ export default function TravellerForm({ onSubmit }: TravellerFormProps) {
         </label>
       </div>
 
+      {submitError && (
+        <p role="alert" className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-rose-600 dark:text-rose-300">
+          {submitError}
+        </p>
+      )}
+
       <button
         type="submit"
-        className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold py-3.5 rounded-2xl transition shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 text-xs"
+        disabled={isSubmitting}
+        className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold py-3.5 rounded-2xl transition shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 text-xs disabled:cursor-wait disabled:opacity-70"
       >
-        <Search className="w-4 h-4" />
-        Find Protected Journey
+        {isSubmitting ? <LoaderCircle className="w-4 h-4 animate-spin" aria-hidden="true" /> : <Search className="w-4 h-4" aria-hidden="true" />}
+        {isSubmitting ? 'Finding Journey…' : 'Find Protected Journey'}
       </button>
     </form>
   );

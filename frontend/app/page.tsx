@@ -1,7 +1,6 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import confetti from 'canvas-confetti';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -15,6 +14,7 @@ import ExplainabilityModal from '../components/ExplainabilityModal';
 import RouteComparison from '../components/RouteComparison';
 import ConfirmPrompt from '../components/ConfirmPrompt';
 import TouristPlanner from '../components/TouristPlanner';
+import ReportAnomaly from '../components/ReportAnomaly';
 
 import {
   MOCK_BASE_JOURNEY,
@@ -24,6 +24,8 @@ import {
   MOCK_ALTERNATIVE_JOURNEY,
 } from '../lib/mockData';
 import { JourneyPlanResponse, DisruptionAlert, TravellerConstraints } from '../types';
+import { fetchBaseJourney } from '../lib/api';
+import { AuthenticatedUser, logout as signOut } from '../lib/auth';
 import {
   Compass,
   Sun,
@@ -44,6 +46,13 @@ import {
   Footprints,
   MapPin,
   AlertCircle,
+  ChevronDown,
+  UserRound,
+  Pencil,
+  CircleHelp,
+  Check,
+  X,
+  LoaderCircle,
 } from 'lucide-react';
 
 const MapView = dynamic(() => import('../components/MapView'), {
@@ -61,11 +70,19 @@ const MapView = dynamic(() => import('../components/MapView'), {
 export default function Home() {
   const [viewState, setViewState] = useState<'LANDING' | 'APP'>('LANDING');
   // First page displayed after login is now ANALYTICS
-  const [activeTab, setActiveTab] = useState<'ANALYTICS' | 'COMMUTER' | 'TOURIST_T5'>('ANALYTICS');
+  const [activeTab, setActiveTab] = useState<'ANALYTICS' | 'COMMUTER' | 'TOURIST_T5' | 'REPORT_ANOMALY'>('ANALYTICS');
   const [isLoginOpen, setIsLoginOpen] = useState(false);
-  const [currentUser, setCurrentUser] = useState<string | null>(null);
+  const [currentUser, setCurrentUser] = useState<AuthenticatedUser | null>(null);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [profileDialog, setProfileDialog] = useState<'PROFILE' | 'EDIT' | 'HELP' | 'SIGN_OUT' | null>(null);
+  const [profileNameDraft, setProfileNameDraft] = useState('');
+  const [profileNotice, setProfileNotice] = useState('');
+  const [signOutError, setSignOutError] = useState('');
+  const [isSigningOut, setIsSigningOut] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [selectedRegionFilter, setSelectedRegionFilter] = useState<'ALL' | 'RAIL' | 'METRO' | 'BUS'>('ALL');
+  const [isPlanning, setIsPlanning] = useState(false);
+  const [planningError, setPlanningError] = useState('');
 
   const [journey, setJourney] = useState<JourneyPlanResponse | null>(null);
   const [disruption, setDisruption] = useState<DisruptionAlert | null>(null);
@@ -88,25 +105,55 @@ export default function Home() {
     setIsDarkMode((prev) => !prev);
   };
 
-  const handleLoginSuccess = (name: string) => {
-    setCurrentUser(name);
+  const handleLoginSuccess = (user: AuthenticatedUser) => {
+    setCurrentUser(user);
     // Landing directly onto Analytics dashboard upon login
     setActiveTab('ANALYTICS');
     setViewState('APP');
   };
 
-  const handlePlanSubmit = (formData: TravellerConstraints) => {
-    setJourney(MOCK_BASE_JOURNEY);
-    setShowAlternative(false);
-
-    setTimeout(() => {
-      triggerScenario(currentScenario);
-    }, 800);
+  const handleExitDashboard = () => {
+    setCurrentUser(null);
+    setProfileMenuOpen(false);
+    setProfileDialog(null);
+    setViewState('LANDING');
   };
 
-  const triggerScenario = (scenario: 'A' | 'B' | 'C') => {
+  const handleConfirmedSignOut = async () => {
+    setIsSigningOut(true);
+    setSignOutError('');
+    try {
+      await signOut();
+      handleExitDashboard();
+    } catch {
+      setSignOutError('Sign out could not be completed because the authentication service is unavailable. Your account session has not been changed.');
+    } finally {
+      setIsSigningOut(false);
+    }
+  };
+
+  const handlePlanSubmit = async (formData: TravellerConstraints) => {
+    setIsPlanning(true);
+    setPlanningError('');
+    setShowAlternative(false);
+
+    try {
+      const plannedJourney = await fetchBaseJourney(formData);
+      setJourney(plannedJourney);
+      setTimeout(() => triggerScenario(currentScenario, false), 800);
+    } catch {
+      setJourney(MOCK_BASE_JOURNEY);
+      setPlanningError(
+        'Routing service is unavailable. Showing the built-in sample journey; start the backend on port 8000 for live routes.',
+      );
+    } finally {
+      setIsPlanning(false);
+    }
+  };
+
+  const triggerScenario = (scenario: 'A' | 'B' | 'C', useFallbackJourney = true) => {
     setCurrentScenario(scenario);
-    if (!journey) setJourney(MOCK_BASE_JOURNEY);
+    if (!journey && useFallbackJourney) setJourney(MOCK_BASE_JOURNEY);
 
     if (scenario === 'A') {
       setDisruption(SCENARIO_CONFIRMED);
@@ -271,33 +318,53 @@ export default function Home() {
                   <span>Tourist Day Optimizer</span>
                 </button>
 
-                <Link
-                  href="/report"
-                  className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('REPORT_ANOMALY')}
+                  className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition ${
+                    activeTab === 'REPORT_ANOMALY'
+                      ? 'bg-rose-600 text-white shadow-sm font-bold'
+                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  }`}
                 >
                   <AlertTriangle className="w-4 h-4 text-rose-500" />
                   <span>Report Anomaly</span>
-                </Link>
+                </button>
               </nav>
             </div>
 
             {/* Sidebar User & Controls */}
             <div className="pt-5 border-t border-slate-200 dark:border-slate-800 space-y-3">
-              <div className="flex items-center justify-between text-xs">
-                <div className="flex items-center gap-2">
-                  <UserCheck className="w-4 h-4 text-emerald-500" />
-                  <span className="font-bold text-slate-700 dark:text-slate-300">
-                    {currentUser || 'Arjun (Business)'}
-                  </span>
+              <button
+                type="button"
+                aria-haspopup="menu"
+                aria-expanded={profileMenuOpen}
+                onClick={() => setProfileMenuOpen((open) => !open)}
+                className="flex w-full items-center gap-2 rounded-xl px-2 py-2 text-left text-xs transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:hover:bg-slate-800"
+              >
+                <UserCheck className="w-4 h-4 shrink-0 text-emerald-500" />
+                <span className="min-w-0 flex-1 truncate font-bold text-slate-700 dark:text-slate-300">
+                  {currentUser?.name || currentUser?.email || 'Guest'}
+                </span>
+                <ChevronDown className={`h-4 w-4 shrink-0 text-slate-400 transition-transform ${profileMenuOpen ? 'rotate-180' : ''}`} />
+              </button>
+              {profileMenuOpen && (
+                <div role="menu" aria-label="Profile menu" className="absolute bottom-24 left-4 right-4 z-30 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl dark:border-slate-700 dark:bg-slate-900 md:left-4 md:right-auto md:w-56">
+                  <button type="button" role="menuitem" onClick={() => { setProfileDialog('PROFILE'); setProfileMenuOpen(false); setProfileNotice(''); }} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800">
+                    <UserRound className="h-4 w-4 text-indigo-500" /> My Profile
+                  </button>
+                  <button type="button" role="menuitem" onClick={() => { setProfileNameDraft(currentUser?.name || ''); setProfileDialog('EDIT'); setProfileMenuOpen(false); setProfileNotice(''); }} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800">
+                    <Pencil className="h-4 w-4 text-indigo-500" /> Edit Profile
+                  </button>
+                  <button type="button" role="menuitem" onClick={() => { setProfileDialog('HELP'); setProfileMenuOpen(false); }} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800">
+                    <CircleHelp className="h-4 w-4 text-indigo-500" /> Help &amp; Support
+                  </button>
+                  <div className="my-1 border-t border-slate-100 dark:border-slate-800" />
+                  <button type="button" role="menuitem" onClick={() => { setSignOutError(''); setProfileDialog('SIGN_OUT'); setProfileMenuOpen(false); }} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-xs font-semibold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40">
+                    <LogOut className="h-4 w-4" /> {currentUser ? 'Log out' : 'Return to home'}
+                  </button>
                 </div>
-                <button
-                  onClick={() => setViewState('LANDING')}
-                  className="text-slate-400 hover:text-rose-500 p-1"
-                  title="Logout"
-                >
-                  <LogOut className="w-4 h-4" />
-                </button>
-              </div>
+              )}
 
               <div className="flex items-center justify-between pt-1">
                 <span className="text-[10px] text-slate-400 font-medium">MMRDA GTFS 2026</span>
@@ -660,7 +727,11 @@ export default function Home() {
                           Hard Bounds
                         </span>
                       </div>
-                      <TravellerForm onSubmit={handlePlanSubmit} />
+                      <TravellerForm
+                        onSubmit={handlePlanSubmit}
+                        isSubmitting={isPlanning}
+                        submitError={planningError}
+                      />
                     </div>
 
                     <AnimatePresence>
@@ -724,6 +795,7 @@ export default function Home() {
                 <TouristPlanner />
               </div>
             )}
+            {activeTab === 'REPORT_ANOMALY' && <ReportAnomaly />}
           </main>
         </div>
       )}
@@ -734,6 +806,85 @@ export default function Home() {
         onClose={() => setIsLoginOpen(false)}
         onLoginSuccess={handleLoginSuccess}
       />
+
+      {profileDialog && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget && !isSigningOut) setProfileDialog(null);
+          }}
+        >
+          <section role="dialog" aria-modal="true" aria-labelledby="profile-dialog-title" className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-700 dark:bg-slate-900">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2 id="profile-dialog-title" className="text-lg font-bold text-slate-900 dark:text-white">
+                  {profileDialog === 'PROFILE' ? 'My Profile' : profileDialog === 'EDIT' ? 'Edit Profile' : profileDialog === 'HELP' ? 'Help & Support' : 'Sign out?'}
+                </h2>
+                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                  {profileDialog === 'HELP'
+                    ? 'For help with routes, choose Route Planner and submit your journey constraints. Transit anomaly reports are reviewed by the Trust Engine.'
+                    : profileDialog === 'SIGN_OUT'
+                      ? 'You will be returned to the TrustRoute home page.'
+                      : 'Your account information for this session.'}
+                </p>
+              </div>
+              <button type="button" onClick={() => setProfileDialog(null)} disabled={isSigningOut} aria-label="Close dialog" className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700 disabled:opacity-50 dark:hover:bg-slate-800 dark:hover:text-white">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {(profileDialog === 'PROFILE' || profileDialog === 'EDIT') && (
+              <div className="mt-5 space-y-3 text-sm">
+                {profileDialog === 'EDIT' ? (
+                  <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300">
+                    Display name
+                    <input value={profileNameDraft} onChange={(event) => setProfileNameDraft(event.target.value)} className="mt-1.5 w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:border-slate-700 dark:bg-slate-950 dark:text-white" />
+                  </label>
+                ) : (
+                  <div className="rounded-xl bg-slate-50 px-4 py-3 dark:bg-slate-800">
+                    <p className="text-[11px] text-slate-500">Name</p>
+                    <p className="mt-1 font-semibold text-slate-800 dark:text-slate-100">{currentUser?.name || 'Guest user'}</p>
+                  </div>
+                )}
+                <div className="rounded-xl bg-slate-50 px-4 py-3 dark:bg-slate-800">
+                  <p className="text-[11px] text-slate-500">Email</p>
+                  <p className="mt-1 font-semibold text-slate-800 dark:text-slate-100">{currentUser?.email || 'Not signed in'}</p>
+                </div>
+                {profileNotice && <p role="status" className="text-xs text-amber-700 dark:text-amber-300">{profileNotice}</p>}
+              </div>
+            )}
+
+            {signOutError && <p role="alert" className="mt-4 rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:bg-rose-950/40 dark:text-rose-300">{signOutError}</p>}
+            <div className="mt-6 flex justify-end gap-2">
+              <button type="button" onClick={() => setProfileDialog(null)} disabled={isSigningOut} className="rounded-xl px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 disabled:opacity-50 dark:text-slate-300 dark:hover:bg-slate-800">
+                Cancel
+              </button>
+              {profileDialog === 'EDIT' && (
+                <button type="button" onClick={() => {
+                  const name = profileNameDraft.trim();
+                  if (name.length < 2) {
+                    setProfileNotice('Enter a name with at least two characters.');
+                    return;
+                  }
+                  setCurrentUser((user) => ({ name, email: user?.email }));
+                  setProfileNotice('Name updated for this session only.');
+                }} className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700">
+                  <Check className="h-4 w-4" /> Save
+                </button>
+              )}
+              {profileDialog === 'SIGN_OUT' && (
+                <button type="button" onClick={() => {
+                  if (currentUser) void handleConfirmedSignOut();
+                  else handleExitDashboard();
+                }} disabled={isSigningOut} className="inline-flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700 disabled:opacity-60">
+                  {isSigningOut && <LoaderCircle className="h-4 w-4 animate-spin" />}
+                  {currentUser ? 'Sign out' : 'Return home'}
+                </button>
+              )}
+            </div>
+          </section>
+        </div>
+      )}
 
       {disruption && (
         <ExplainabilityModal
