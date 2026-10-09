@@ -55,9 +55,9 @@ export default function Home() {
   const [showAlternative, setShowAlternative] = useState(false);
   const [isExplainOpen, setIsExplainOpen] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
-  const [currentScenario, setCurrentScenario] = useState<'A' | 'B' | 'C'>('A');
+  const [currentScenario, setCurrentScenario] = useState<'A' | 'B' | 'C'>('B');
 
-  // Synchronize Dark / Light mode with HTML class
+  // Synchronize Dark / Light mode with <html> class
   useEffect(() => {
     const root = document.documentElement;
     if (isDarkMode) {
@@ -82,24 +82,20 @@ export default function Home() {
 
     setTimeout(() => {
       triggerScenario(currentScenario);
-    }, 1200);
+    }, 800);
   };
 
-  // Switch between POC testing scenarios
   const triggerScenario = (scenario: 'A' | 'B' | 'C') => {
     setCurrentScenario(scenario);
     if (!journey) setJourney(MOCK_BASE_JOURNEY);
 
     if (scenario === 'A') {
-      // Confirmed Disruption impacting route -> replan proposal
       setDisruption(SCENARIO_CONFIRMED);
       setShowAlternative(true);
     } else if (scenario === 'B') {
-      // Weak crowd rumor -> WATCH status only, no reroute
       setDisruption(SCENARIO_WATCH_RUMOR);
       setShowAlternative(false);
     } else if (scenario === 'C') {
-      // Confirmed but off-route -> no reroute
       setDisruption(SCENARIO_IRRELEVANT);
       setShowAlternative(false);
     }
@@ -127,15 +123,13 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors">
-      {/* View 1: Landing Page */}
+    <div className="min-h-screen bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors">
       {viewState === 'LANDING' ? (
         <LandingView
           onGetStarted={() => setViewState('APP')}
           onLoginClick={() => setIsLoginOpen(true)}
         />
       ) : (
-        /* View 2: Dashboard */
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
           {/* Header */}
           <header className="flex items-center justify-between bg-white dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200 dark:border-slate-800 p-4 rounded-3xl shadow-sm">
@@ -149,16 +143,16 @@ export default function Home() {
                 </div>
               </div>
               <div>
-                <h1 className="text-base font-extrabold tracking-tight bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">
-                  TrustRoute Engine[cite: 50]
+                <h1 className="text-base font-extrabold tracking-tight text-slate-900 dark:text-white">
+                  TrustRoute Engine
                 </h1>
                 <span className="text-[10px] font-semibold text-indigo-600 dark:text-indigo-400">
-                  Mumbai Multimodal Pilot (BEST + Metro)[cite: 55, 56]
+                  Mumbai Multimodal Pilot (BEST + Metro)
                 </span>
               </div>
             </div>
 
-            {/* Controls: Mode Toggle, User, Back to Landing */}
+            {/* Controls: Mode Toggle, User Persona, Exit */}
             <div className="flex items-center gap-2">
               <button
                 type="button"
@@ -166,13 +160,17 @@ export default function Home() {
                 className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:scale-105 active:scale-95 transition-all shadow-sm"
                 title="Toggle Theme"
               >
-                {isDarkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-600" />}
+                {isDarkMode ? (
+                  <Sun className="w-4 h-4 text-amber-400" />
+                ) : (
+                  <Moon className="w-4 h-4 text-indigo-600" />
+                )}
               </button>
 
               <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs">
                 <UserCheck className="w-3.5 h-3.5 text-emerald-500" />
                 <span className="font-semibold text-slate-700 dark:text-slate-200">
-                  {currentUser || 'Arjun (Business)'}[cite: 34, 77]
+                  {currentUser || 'Arjun (Business)'}
                 </span>
               </div>
 
@@ -186,58 +184,58 @@ export default function Home() {
             </div>
           </header>
 
-          {/* Judges Scenario Toolbar: Showcase All 6 POC Features */}
-          <div className="bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-900/60 p-3 rounded-2xl flex flex-wrap items-center justify-between gap-3 text-xs">
-            <span className="font-bold text-indigo-900 dark:text-indigo-300 flex items-center gap-1.5">
+          {/* Clean Scenario Toolbar */}
+          <div className="bg-white dark:bg-slate-900/70 border border-slate-200 dark:border-slate-800 p-3 rounded-2xl flex flex-wrap items-center justify-between gap-3 text-xs shadow-sm">
+            <span className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
               <Sparkles className="w-4 h-4 text-indigo-500" />
-              POC Demo Scenario Switcher:[cite: 160]
+              Demo Scenarios:
             </span>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => triggerScenario('A')}
-                className={`px-3 py-1.5 rounded-xl font-bold transition shadow-sm ${
+                className={`px-3.5 py-1.5 rounded-xl font-bold transition shadow-sm ${
                   currentScenario === 'A'
                     ? 'bg-rose-600 text-white'
-                    : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200'
                 }`}
               >
-                Scenario A: Confirmed Outage (Reroute)[cite: 78, 153]
+                Scenario A: Confirmed Outage (Reroute)
               </button>
               <button
                 onClick={() => triggerScenario('B')}
-                className={`px-3 py-1.5 rounded-xl font-bold transition shadow-sm ${
+                className={`px-3.5 py-1.5 rounded-xl font-bold transition shadow-sm ${
                   currentScenario === 'B'
                     ? 'bg-amber-500 text-white'
-                    : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200'
                 }`}
               >
-                Scenario B: Unverified Rumor (Warn Only)[cite: 78, 153]
+                Scenario B: Unverified Rumor (Warn Only)
               </button>
               <button
                 onClick={() => triggerScenario('C')}
-                className={`px-3 py-1.5 rounded-xl font-bold transition shadow-sm ${
+                className={`px-3.5 py-1.5 rounded-xl font-bold transition shadow-sm ${
                   currentScenario === 'C'
                     ? 'bg-emerald-600 text-white'
-                    : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200'
                 }`}
               >
-                Scenario C: Off-Route Disruption (No Impact)[cite: 78, 153]
+                Scenario C: Off-Route Disruption (No Impact)
               </button>
             </div>
           </div>
 
           {/* Main Grid Layout */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-            {/* Left Column: Constraints Input Form & Replanning Proposal */}
+            {/* Left: Constraints & Replanning */}
             <div className="lg:col-span-5 space-y-6">
               <div className="bg-white dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-sm">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
                     <SlidersHorizontal className="w-4 h-4 text-indigo-500" />
-                    Trip Constraints[cite: 54, 123]
+                    Trip Constraints
                   </h2>
                   <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/30">
-                    Feature 4: Hard Bounds[cite: 160]
+                    Hard Bounds
                   </span>
                 </div>
                 <TravellerForm onSubmit={handlePlanSubmit} />
@@ -267,7 +265,7 @@ export default function Home() {
               </AnimatePresence>
             </div>
 
-            {/* Right Column: Live Map & Itinerary Steps */}
+            {/* Right: Map & Progress Steps */}
             <div className="lg:col-span-7 space-y-4">
               {journey ? (
                 <div className="bg-white dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-sm space-y-4">
@@ -286,9 +284,11 @@ export default function Home() {
                   <div className="w-16 h-16 rounded-full bg-indigo-50 dark:bg-indigo-600/10 border border-indigo-200 dark:border-indigo-500/20 flex items-center justify-center mb-4">
                     <Compass className="w-8 h-8 text-indigo-600 dark:text-indigo-400 animate-pulse" />
                   </div>
-                  <h3 className="text-slate-900 dark:text-white font-bold text-base">Awaiting Route Constraints</h3>
+                  <h3 className="text-slate-900 dark:text-white font-bold text-base">
+                    Awaiting Route Constraints
+                  </h3>
                   <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mt-1.5 leading-relaxed">
-                    Enter origin and destination parameters on the left to simulate multimodal route generation with live disruption detection[cite: 50, 95].
+                    Set origin, destination, and budget constraints on the left. TrustRoute will compute an OpenTripPlanner multimodal route.
                   </p>
                 </div>
               )}

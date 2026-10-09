@@ -21,6 +21,13 @@ export interface JourneyLeg {
   coordinates: [number, number][]; // [lng, lat]
 }
 
+export interface CarbonMetrics {
+  co2EmittedGrams: number;
+  co2SavedGrams: number;
+  equivalentTreesPlantedDays?: number;
+  cabComparisonFare: number;
+  moneySaved: number;
+}
 export interface JourneySummary {
   origin: string;
   destination: string;
@@ -30,6 +37,7 @@ export interface JourneySummary {
   walkingMeters: number;
   transfers: number;
   status: 'OPTIMAL' | 'PROTECTED' | 'DELAYED';
+  carbon?: CarbonMetrics;
 }
 
 export interface JourneyPlanResponse {

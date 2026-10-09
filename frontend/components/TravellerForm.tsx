@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { TravellerConstraints } from '@/types';
+import { TravellerConstraints } from '../types';
 import { Search } from 'lucide-react';
 
 interface TravellerFormProps {
@@ -46,22 +46,26 @@ export default function TravellerForm({ onSubmit }: TravellerFormProps) {
     <form onSubmit={handleSubmit} className="space-y-4 text-xs">
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="font-semibold text-slate-700 block mb-1">Origin</label>
+          <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">
+            Origin
+          </label>
           <input
             type="text"
             value={origin}
             onChange={(e) => setOrigin(e.target.value)}
-            className="w-full px-3 py-2 border rounded-lg focus:outline-indigo-500"
+            className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
             required
           />
         </div>
         <div>
-          <label className="font-semibold text-slate-700 block mb-1">Destination</label>
+          <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">
+            Destination
+          </label>
           <input
             type="text"
             value={destination}
             onChange={(e) => setDestination(e.target.value)}
-            className="w-full px-3 py-2 border rounded-lg focus:outline-indigo-500"
+            className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
             required
           />
         </div>
@@ -69,58 +73,68 @@ export default function TravellerForm({ onSubmit }: TravellerFormProps) {
 
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="font-semibold text-slate-700 block mb-1">Departure</label>
+          <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">
+            Departure
+          </label>
           <input
             type="text"
             value={departureTime}
             onChange={(e) => setDepartureTime(e.target.value)}
-            className="w-full px-3 py-2 border rounded-lg focus:outline-indigo-500"
+            className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
           />
         </div>
         <div>
-          <label className="font-semibold text-slate-700 block mb-1">Deadline</label>
+          <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">
+            Deadline
+          </label>
           <input
             type="text"
             value={deadline}
             onChange={(e) => setDeadline(e.target.value)}
-            className="w-full px-3 py-2 border rounded-lg focus:outline-indigo-500"
+            className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
           />
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="font-semibold text-slate-700 block mb-1">Max Budget (₹)</label>
+          <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">
+            Max Budget (₹)
+          </label>
           <input
             type="number"
             value={budget}
             onChange={(e) => setBudget(Number(e.target.value))}
-            className="w-full px-3 py-2 border rounded-lg focus:outline-indigo-500"
+            className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
           />
         </div>
         <div>
-          <label className="font-semibold text-slate-700 block mb-1">Max Walk (meters)</label>
+          <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">
+            Max Walk (meters)
+          </label>
           <input
             type="number"
             value={maxWalkingMeters}
             onChange={(e) => setMaxWalkingMeters(Number(e.target.value))}
-            className="w-full px-3 py-2 border rounded-lg focus:outline-indigo-500"
+            className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
           />
         </div>
       </div>
 
       <div>
-        <label className="font-semibold text-slate-700 block mb-1.5">Transit Modes</label>
+        <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-2">
+          Permitted Transit Modes
+        </label>
         <div className="flex gap-2">
           {(['BUS', 'METRO', 'WALK'] as const).map((mode) => (
             <button
               type="button"
               key={mode}
               onClick={() => toggleMode(mode)}
-              className={`px-3 py-1.5 rounded-lg border font-medium ${
+              className={`px-4 py-2 rounded-xl font-bold transition shadow-sm ${
                 allowedModes.includes(mode)
-                  ? 'bg-indigo-600 text-white border-indigo-600'
-                  : 'bg-slate-50 text-slate-600 border-slate-200'
+                  ? 'bg-indigo-600 text-white'
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 hover:border-indigo-400'
               }`}
             >
               {mode}
@@ -135,16 +149,16 @@ export default function TravellerForm({ onSubmit }: TravellerFormProps) {
           id="access"
           checked={accessibilityRequired}
           onChange={(e) => setAccessibilityRequired(e.target.checked)}
-          className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+          className="rounded border-slate-300 dark:border-slate-700 text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer"
         />
-        <label htmlFor="access" className="text-slate-700 font-medium">
+        <label htmlFor="access" className="text-slate-700 dark:text-slate-300 font-medium cursor-pointer">
           Require Step-Free / Wheelchair Accessibility
         </label>
       </div>
 
       <button
         type="submit"
-        className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 rounded-xl transition shadow-sm flex items-center justify-center gap-2 text-sm"
+        className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold py-3.5 rounded-2xl transition shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 text-xs"
       >
         <Search className="w-4 h-4" />
         Find Protected Journey

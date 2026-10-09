@@ -11,6 +11,12 @@ export const MOCK_BASE_JOURNEY: JourneyPlanResponse = {
     walkingMeters: 900,
     transfers: 1,
     status: 'OPTIMAL',
+    carbon: {
+      co2EmittedGrams: 485,
+      co2SavedGrams: 2120, // 2.12 kg CO2 saved vs single-occupancy cab
+      cabComparisonFare: 345,
+      moneySaved: 300,
+    },
   },
   legs: [
     {
@@ -77,7 +83,7 @@ export const SCENARIO_CONFIRMED: DisruptionAlert = {
     'GDELT Event Index: Rail disruption reported at Saki Naka',
   ],
   explanation:
-    'Multiple verified evidence sources corroborate an active power failure. Expected delay is ~35 mins, which violates your 19:00 deadline buffer. Replan proposal triggered.',
+    'Multiple verified evidence sources corroborate an active power failure. Expected delay is ~35 mins, violating your 19:00 deadline buffer. Replan proposal triggered.',
   delayEstimateMin: 35,
 };
 
@@ -119,7 +125,7 @@ export const SCENARIO_IRRELEVANT: DisruptionAlert = {
   delayEstimateMin: 40,
 };
 
-// The Constraint-Checked Alternative (USP 4: Constraints stay binding)
+// Alternative Journey: Constraint-checked alternative
 export const MOCK_ALTERNATIVE_JOURNEY: JourneyPlanResponse = {
   journeyId: 'j-mumbai-002-replan',
   summary: {
@@ -131,6 +137,12 @@ export const MOCK_ALTERNATIVE_JOURNEY: JourneyPlanResponse = {
     walkingMeters: 850,
     transfers: 2,
     status: 'PROTECTED',
+    carbon: {
+      co2EmittedGrams: 610,
+      co2SavedGrams: 1980, // 1.98 kg CO2 saved
+      cabComparisonFare: 360,
+      moneySaved: 305,
+    },
   },
   legs: [
     {

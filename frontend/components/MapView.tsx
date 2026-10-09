@@ -5,13 +5,6 @@ import * as maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { JourneyLeg } from '../types';
 
-// Explicitly set the worker URL to MapLibre's unpkg CDN worker to prevent local bundler worker failures
-// @ts-ignore
-if (typeof window !== 'undefined' && maplibregl.setWorkerUrl) {
-  // @ts-ignore
-  maplibregl.setWorkerUrl('https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl-csp-worker.js');
-}
-
 interface MapViewProps {
   legs: JourneyLeg[];
 }
@@ -31,7 +24,9 @@ export default function MapView({ legs }: MapViewProps) {
           sources: {
             'osm-tiles': {
               type: 'raster',
-              tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+              tiles: [
+                'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
+              ],
               tileSize: 256,
               attribution: '&copy; OpenStreetMap contributors',
             },
@@ -46,94 +41,97 @@ export default function MapView({ legs }: MapViewProps) {
             },
           ],
         },
-        center: [72.8777, 19.076], // Mumbai coordinates
+        center: [72.8777, 19.076], // Mumbai center
         zoom: 11,
       });
     }
 
     const map = mapInstance.current;
 
-    const renderLayers = () => {
+    const updateRouteData = () => {
       if (!legs || legs.length === 0) return;
 
-      const allCoordinates: [number, number][] = [];
-
-      legs.forEach((leg, index) => {
-        const sourceId = `route-leg-${index}`;
-        const layerId = `layer-leg-${index}`;
-
-        if (map.getSource(sourceId)) {
-          if (map.getLayer(layerId)) {
-            map.removeLayer(layerId);
-          }
-          map.removeSource(sourceId);
-        }
-
-        allCoordinates.push(...leg.coordinates);
-
-        map.addSource(sourceId, {
-          type: 'geojson',
-          data: {
-            type: 'Feature',
-            properties: {},
-            geometry: {
-              type: 'LineString',
-              coordinates: leg.coordinates,
-            },
+      const validFeatures = legs
+        .filter((leg) => leg.coordinates && leg.coordinates.length >= 2)
+        .map((leg, idx) => ({
+          type: 'Feature' as const,
+          properties: {
+            id: `leg-${idx}`,
+            mode: leg.mode,
+            color:
+              leg.mode === 'METRO'
+                ? '#0284c7'
+                : leg.mode === 'BUS'
+                ? '#16a34a'
+                : '#64748b',
+            dash: leg.mode === 'WALK' ? [2, 2] : [1, 0],
           },
+          geometry: {
+            type: 'LineString' as const,
+            coordinates: leg.coordinates,
+          },
+        }));
+
+      const geojsonData: GeoJSON.FeatureCollection = {
+        type: 'FeatureCollection',
+        features: validFeatures,
+      };
+
+      const source = map.getSource('trustroute-paths') as maplibregl.GeoJSONSource;
+
+      if (source) {
+        source.setData(geojsonData);
+      } else {
+        map.addSource('trustroute-paths', {
+          type: 'geojson',
+          data: geojsonData,
         });
 
-        const color =
-          leg.mode === 'METRO'
-            ? '#0284c7'
-            : leg.mode === 'BUS'
-            ? '#16a34a'
-            : '#64748b';
-
         map.addLayer({
-          id: layerId,
+          id: 'route-line-layer',
           type: 'line',
-          source: sourceId,
+          source: 'trustroute-paths',
           layout: {
             'line-join': 'round',
             'line-cap': 'round',
           },
           paint: {
-            'line-color': color,
-            'line-width': leg.mode === 'WALK' ? 3 : 5,
-            'line-dasharray': leg.mode === 'WALK' ? [2, 2] : [1, 0],
+            'line-color': ['get', 'color'],
+            'line-width': ['case', ['==', ['get', 'mode'], 'WALK'], 3, 5],
           },
         });
-      });
+      }
 
-      if (allCoordinates.length > 0) {
-        const bounds = allCoordinates.reduce(
+      // Fit bounds cleanly
+      const allCoords = legs.flatMap((l) => l.coordinates);
+      if (allCoords.length > 0) {
+        const bounds = allCoords.reduce(
           (b, coord) => b.extend(coord),
-          new maplibregl.LngLatBounds(allCoordinates[0], allCoordinates[0])
+          new maplibregl.LngLatBounds(allCoords[0], allCoords[0])
         );
-        map.fitBounds(bounds, { padding: 40 });
+        map.fitBounds(bounds, { padding: 45, maxZoom: 14 });
       }
     };
 
     if (map.isStyleLoaded()) {
-      renderLayers();
+      updateRouteData();
     } else {
-      map.once('load', renderLayers);
+      map.once('load', updateRouteData);
     }
   }, [legs]);
 
   return (
     <div className="relative w-full h-80 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-sm">
       <div ref={mapContainer} className="w-full h-full" />
-      <div className="absolute top-3 right-3 bg-white/90 dark:bg-slate-900/90 backdrop-blur px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs flex gap-3 shadow-sm font-semibold text-slate-800 dark:text-slate-200">
+      <div className="absolute top-3 right-3 bg-white/95 dark:bg-slate-900/90 backdrop-blur px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs flex gap-3 shadow-md font-semibold text-slate-800 dark:text-slate-200">
         <span className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-full bg-slate-500 inline-block" /> Walk[cite: 55, 56]
+          <span className="w-2.5 h-2.5 rounded-full bg-slate-500 inline-block" /> Walk
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-full bg-green-600 inline-block" /> Bus[cite: 55]
+          <span className="w-2.5 h-2.5 rounded-full bg-green-600 inline-block" /> Bus
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-full bg-sky-600 inline-block" /> Metro[cite: 55]
+          <span className="w-2.5 h-2.5 rounded-full bg-sky-600 inline-block" /> Metro
         </span>
       </div>
     </div>
