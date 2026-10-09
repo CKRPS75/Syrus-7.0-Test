@@ -1,0 +1,17 @@
+{
+  "dataset_version": "demo-1.0",
+  "city": "Mumbai",
+  "source_status": "demo_prior_not_official_mmrda",
+  "coverage": "Mumbai commuting corridors, including BKC, Andheri, Lower Parel, South Mumbai, Dadar, Kurla.",
+  "entries": [
+    {"zone": "bkc", "direction": "inbound", "time_interval": "08:00-10:00", "mode": "TRANSIT", "prior": 0.78, "confidence": 0.64},
+    {"zone": "andheri", "direction": "inbound", "time_interval": "08:00-10:00", "mode": "TRANSIT", "prior": 0.71, "confidence": 0.62},
+    {"zone": "lower_parel", "direction": "inbound", "time_interval": "08:00-10:00", "mode": "TRANSIT", "prior": 0.74, "confidence": 0.63},
+    {"zone": "bkc", "direction": "outbound", "time_interval": "17:00-20:00", "mode": "TRANSIT", "prior": 0.68, "confidence": 0.61},
+    {"zone": "andheri", "direction": "outbound", "time_interval": "17:00-20:00", "mode": "TRANSIT", "prior": 0.67, "confidence": 0.6},
+    {"zone": "south_mumbai", "direction": "outbound", "time_interval": "17:00-20:00", "mode": "TRANSIT", "prior": 0.64, "confidence": 0.58},
+    {"zone": "all", "direction": "neutral", "time_interval": "10:00-16:00", "mode": "TRANSIT", "prior": 0.28, "confidence": 0.4}
+  ],
+  "methodology": "Transparent demo prior: recurring weekday commute demand is weighted by corridor, time bucket, and direction. Service frequency context is used only as a modifier and never treated as passenger occupancy.",
+  "limitations": "Not derived from official MMRDA OD tables. Use only as a low-confidence, transparent demo prior for route ranking and explanation."
+}

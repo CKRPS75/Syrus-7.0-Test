@@ -45,9 +45,20 @@ htmlcov/
 # Database
 *.sqlite3
 postgres_data/
+*.dump
+*.sql
+
+# Raw datasets and downloaded data
+data/raw/
 
 # OS
 .DS_Store
 Thumbs.db
 
+# Node.js
 node_modules/
+
+# Build and temporary files
+*.log
+tmp/
+temp/
