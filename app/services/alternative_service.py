@@ -51,7 +51,8 @@ def generate_alternative(journey, disruption):
         key=lambda candidate: (
             candidate.arrival or "",
             candidate.transfers,
-            candidate.walking_m
+            candidate.walking_m,
+            getattr(candidate, "crowding_risk", 1.0),
         )
     )
 

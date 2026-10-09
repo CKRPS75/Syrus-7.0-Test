@@ -11,6 +11,8 @@ class JourneyLeg(BaseModel):
     route_name: str | None = None
     route_long_name: str | None = None
     wheelchair_accessible: bool = True
+    crowding_risk: float | None = None
+    crowding_confidence: float | None = None
 
 
 class Journey(BaseModel):
@@ -31,4 +33,8 @@ class Journey(BaseModel):
     walking_m: int = 0
     transfers: int = 0
     wheelchair_accessible: bool = True
+    crowding_risk: float | None = None
+    crowding_confidence: float | None = None
+    crowding_summary: str = ""
+    crowding_is_observed: bool = False
     legs: List[JourneyLeg] = Field(default_factory=list)

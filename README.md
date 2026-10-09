@@ -193,6 +193,18 @@ pytest -v
 
 ---
 
+## Crowding Prior (Transparent Demo Model)
+
+The project includes a small, versioned crowd-prior dataset at `app/data/mumbai_crowd_priors.json` and a transparent service in `app/services/crowding_service.py`. The prior is intentionally labelled as a `demo_prior_not_official_mmrda` dataset and is used only to provide a low-confidence time-aware risk signal for candidate-route ranking.
+
+It is designed to distinguish between:
+- observed crowding (not available here)
+- inferred historical commute pressure
+- GTFS service frequency (service supply context only)
+- unknown / low-confidence cases
+
+This model does not treat GTFS trip counts as passenger occupancy and does not claim to be official MMRDA OD data.
+
 ## Future Integrations
 
 - **OpenTripPlanner (OTP)**: Replace `MockRoutingProvider` with live OTP GraphQL/REST client.

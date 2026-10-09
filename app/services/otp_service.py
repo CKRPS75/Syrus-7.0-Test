@@ -3,6 +3,7 @@ import os
 import requests
 
 from app.models.journey import Journey, JourneyLeg
+from app.services.crowding_service import estimate_crowding
 
 OTP_URL = "http://localhost:8080/otp/routers/default/index/graphql"
 
@@ -321,4 +322,21 @@ def plan_journey(
 
         journeys_by_signature[signature] = journey
 
-    return list(journeys_by_signature.values())
+    scheduled_journeys = list(journeys_by_signature.values())
+
+    for journey in scheduled_journeys:
+        crowding = estimate_crowding(
+            origin=origin,
+            destination=destination,
+            departure_time=journey.departure,
+            legs=journey.legs,
+        )
+        journey.crowding_risk = crowding["crowding_risk"]
+        journey.crowding_confidence = crowding["confidence"]
+        journey.crowding_summary = crowding["summary"]
+        journey.crowding_is_observed = crowding["is_observed"]
+        for leg in journey.legs:
+            leg.crowding_risk = crowding["crowding_risk"]
+            leg.crowding_confidence = crowding["confidence"]
+
+    return scheduled_journeys
