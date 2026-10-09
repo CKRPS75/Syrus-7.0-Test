@@ -3,7 +3,14 @@
 import React, { useEffect, useRef } from 'react';
 import * as maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { JourneyLeg } from '@/types';
+import { JourneyLeg } from '../types';
+
+// Explicitly set the worker URL to MapLibre's unpkg CDN worker to prevent local bundler worker failures
+// @ts-ignore
+if (typeof window !== 'undefined' && maplibregl.setWorkerUrl) {
+  // @ts-ignore
+  maplibregl.setWorkerUrl('https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl-csp-worker.js');
+}
 
 interface MapViewProps {
   legs: JourneyLeg[];
@@ -39,7 +46,7 @@ export default function MapView({ legs }: MapViewProps) {
             },
           ],
         },
-        center: [72.8777, 19.076], // Mumbai default
+        center: [72.8777, 19.076], // Mumbai coordinates
         zoom: 11,
       });
     }
@@ -56,7 +63,9 @@ export default function MapView({ legs }: MapViewProps) {
         const layerId = `layer-leg-${index}`;
 
         if (map.getSource(sourceId)) {
-          map.removeLayer(layerId);
+          if (map.getLayer(layerId)) {
+            map.removeLayer(layerId);
+          }
           map.removeSource(sourceId);
         }
 
@@ -114,17 +123,17 @@ export default function MapView({ legs }: MapViewProps) {
   }, [legs]);
 
   return (
-    <div className="relative w-full h-80 rounded-xl overflow-hidden border border-slate-200 shadow-sm">
+    <div className="relative w-full h-80 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-sm">
       <div ref={mapContainer} className="w-full h-full" />
-      <div className="absolute top-3 right-3 bg-white/95 backdrop-blur px-3 py-1.5 rounded-lg border border-slate-200 text-xs flex gap-3 shadow-sm font-medium">
+      <div className="absolute top-3 right-3 bg-white/90 dark:bg-slate-900/90 backdrop-blur px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs flex gap-3 shadow-sm font-semibold text-slate-800 dark:text-slate-200">
         <span className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-full bg-slate-500 inline-block" /> Walk
+          <span className="w-2.5 h-2.5 rounded-full bg-slate-500 inline-block" /> Walk[cite: 55, 56]
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-full bg-green-600 inline-block" /> Bus
+          <span className="w-2.5 h-2.5 rounded-full bg-green-600 inline-block" /> Bus[cite: 55]
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-full bg-sky-600 inline-block" /> Metro
+          <span className="w-2.5 h-2.5 rounded-full bg-sky-600 inline-block" /> Metro[cite: 55]
         </span>
       </div>
     </div>

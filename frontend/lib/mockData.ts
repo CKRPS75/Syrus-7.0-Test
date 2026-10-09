@@ -1,4 +1,4 @@
-import { JourneyPlanResponse, DisruptionAlert } from '@/types';
+import { JourneyPlanResponse, DisruptionAlert } from '../types';
 
 export const MOCK_BASE_JOURNEY: JourneyPlanResponse = {
   journeyId: 'j-mumbai-001',
@@ -15,8 +15,8 @@ export const MOCK_BASE_JOURNEY: JourneyPlanResponse = {
   legs: [
     {
       mode: 'WALK',
-      fromName: 'Home (Chembur)',
-      toName: 'Chembur Naka Bus Stop',
+      fromName: 'Home (Chembur Naka)',
+      toName: 'Chembur Bus Depot',
       durationMin: 6,
       distanceMeters: 400,
       coordinates: [
@@ -26,8 +26,8 @@ export const MOCK_BASE_JOURNEY: JourneyPlanResponse = {
     },
     {
       mode: 'BUS',
-      lineName: 'Bus 365',
-      fromName: 'Chembur Naka',
+      lineName: 'BEST Bus 365',
+      fromName: 'Chembur Bus Depot',
       toName: 'Ghatkopar Station West',
       durationMin: 24,
       distanceMeters: 4500,
@@ -50,7 +50,7 @@ export const MOCK_BASE_JOURNEY: JourneyPlanResponse = {
     },
     {
       mode: 'WALK',
-      fromName: 'Andheri Metro Station',
+      fromName: 'Andheri Station East',
       toName: 'Office / Destination',
       durationMin: 7,
       distanceMeters: 500,
@@ -62,24 +62,64 @@ export const MOCK_BASE_JOURNEY: JourneyPlanResponse = {
   ],
 };
 
-export const MOCK_DISRUPTION_ALERT: DisruptionAlert = {
+// Scenario A: Real Confirmed Disruption Impacting Route (USP 1, 3, 5)
+export const SCENARIO_CONFIRMED: DisruptionAlert = {
   eventId: 'EVT-M1-409',
-  title: 'Metro Line 1 Major Signal Delay',
+  title: 'Metro Line 1 Signal Interlocking Breakdown',
   status: 'CONFIRMED',
   confidenceScore: 0.88,
   severity: 'HIGH',
   impactsCurrentRoute: true,
   affectedEntity: 'Metro Line 1 (Ghatkopar - Andheri)',
   evidenceSources: [
-    'Official Mumbai Metro Advisory (Status: Active Delay)',
-    '3 Independent verified crowd reports (< 15 mins)',
-    'Local Mobility News (GDELT feed indexed)',
+    'Official Mumbai Metro Advisory (Status: Suspended)',
+    '3 Independent verified crowd reports (< 12 mins)',
+    'GDELT Event Index: Rail disruption reported at Saki Naka',
   ],
   explanation:
-    'Multiple verified reports confirm technical failure at Ghatkopar interlocking. Trains delayed up to 35 mins. Your planned 17:35 connection will be missed.',
+    'Multiple verified evidence sources corroborate an active power failure. Expected delay is ~35 mins, which violates your 19:00 deadline buffer. Replan proposal triggered.',
   delayEstimateMin: 35,
 };
 
+// Scenario B: Unconfirmed / False Rumor (USP 1: Weighs evidence, not rumors)
+export const SCENARIO_WATCH_RUMOR: DisruptionAlert = {
+  eventId: 'EVT-CROWD-991',
+  title: 'Unverified Crowd Rumor: Bus 365 Traffic Halt',
+  status: 'WATCH',
+  confidenceScore: 0.42,
+  severity: 'LOW',
+  impactsCurrentRoute: true,
+  affectedEntity: 'Chembur Naka Roadway',
+  evidenceSources: [
+    '1 Unverified Single Crowd Report (No photo / no second source)',
+    'Zero matching official alerts',
+    'Crowd evidence capped at +2.6 (cannot confirm alone)',
+  ],
+  explanation:
+    'Confidence score is 42% (below the 65% confirmation threshold). In accordance with USP 1, weak evidence generates a warning only. No automatic rerouting was triggered.',
+  delayEstimateMin: 8,
+};
+
+// Scenario C: Real Confirmed Disruption, but Irrelevant to Traveller (USP 2: Impact on YOU)
+export const SCENARIO_IRRELEVANT: DisruptionAlert = {
+  eventId: 'EVT-WEST-012',
+  title: 'Confirmed Closure: Western Railway Bandra Slow Line',
+  status: 'CONFIRMED',
+  confidenceScore: 0.94,
+  severity: 'HIGH',
+  impactsCurrentRoute: false,
+  affectedEntity: 'Western Suburban Line (Bandra)',
+  evidenceSources: [
+    'Western Railway Official Alert',
+    '6 Independent crowd reports',
+    'Local news corroboration',
+  ],
+  explanation:
+    'Disruption is 100% verified, but the Impact Engine determined your journey uses Metro Line 1 & Bus 365. Your specific itinerary is unaffected; no replanning is required.',
+  delayEstimateMin: 40,
+};
+
+// The Constraint-Checked Alternative (USP 4: Constraints stay binding)
 export const MOCK_ALTERNATIVE_JOURNEY: JourneyPlanResponse = {
   journeyId: 'j-mumbai-002-replan',
   summary: {
@@ -95,8 +135,8 @@ export const MOCK_ALTERNATIVE_JOURNEY: JourneyPlanResponse = {
   legs: [
     {
       mode: 'WALK',
-      fromName: 'Home (Chembur)',
-      toName: 'Chembur Mono Station',
+      fromName: 'Home (Chembur Naka)',
+      toName: 'Chembur Monorail Station',
       durationMin: 5,
       distanceMeters: 350,
       coordinates: [
@@ -106,9 +146,9 @@ export const MOCK_ALTERNATIVE_JOURNEY: JourneyPlanResponse = {
     },
     {
       mode: 'BUS',
-      lineName: 'AC Fast Bus C-505',
+      lineName: 'BEST AC Fast Bus C-505',
       fromName: 'Chembur',
-      toName: 'Bandra Kurla Complex (BKC)',
+      toName: 'BKC Connector Interchange',
       durationMin: 28,
       distanceMeters: 6200,
       coordinates: [
@@ -118,7 +158,7 @@ export const MOCK_ALTERNATIVE_JOURNEY: JourneyPlanResponse = {
     },
     {
       mode: 'BUS',
-      lineName: 'Western Express Bus 340',
+      lineName: 'BEST Bus 340',
       fromName: 'BKC Connector',
       toName: 'Andheri Station East',
       durationMin: 32,
