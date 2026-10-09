@@ -1,0 +1,18 @@
+{
+  "description": "Synthetic demo ranges for disruption delay simulation in Mumbai hackathon MVP",
+  "disruption_levels": {
+    "LOW": {
+      "min_delay_minutes": 5,
+      "max_delay_minutes": 10
+    },
+    "MEDIUM": {
+      "min_delay_minutes": 10,
+      "max_delay_minutes": 25
+    },
+    "HIGH": {
+      "min_delay_minutes": 25,
+      "max_delay_minutes": 60
+    }
+  },
+  "missed_connection_buffer_minutes": 15
+}

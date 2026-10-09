@@ -1,20 +1,27 @@
-from pydantic import BaseModel
+import uuid
+from datetime import datetime
+from typing import Optional
+from pydantic import BaseModel, ConfigDict, Field
+from app.db.models import ReplanStatusEnum
+from app.schemas.itinerary import ItineraryResponse
 
 
 class ReplanRequest(BaseModel):
-    origin: str
-    destination: str
-    departure: str
+    journey_id: uuid.UUID
+    event_id: uuid.UUID
 
-    route_name: str
-    disruption_type: str
-    severity: str
 
-    confirmed: bool = False
-    active: bool = True
+class ReplanProposalResponse(BaseModel):
+    id: uuid.UUID
+    journey_id: uuid.UUID
+    event_id: uuid.UUID
+    old_itinerary_id: uuid.UUID
+    new_itinerary_id: uuid.UUID
+    reason: str
+    time_saved: int = Field(..., description="Minutes saved compared to delayed original route")
+    status: ReplanStatusEnum
+    created_at: datetime
+    expires_at: Optional[datetime] = None
+    new_itinerary: Optional[ItineraryResponse] = None
 
-    deadline: str | None = None
-    budget: float | None = None
-    max_walking: int | None = None
-    transfer_tolerance: int | None = None
-    forbidden_modes: list[str] = []
+    model_config = ConfigDict(from_attributes=True)

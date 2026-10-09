@@ -1,0 +1,5 @@
+{
+  "metro_elevator_availability": 0.85,
+  "bus_low_floor_ratio": 0.40,
+  "sidewalk_wheelchair_accessible_percent": 30.0
+}

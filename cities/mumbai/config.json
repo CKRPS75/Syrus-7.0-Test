@@ -1,0 +1,12 @@
+{
+  "city_id": "mumbai",
+  "name": "Mumbai",
+  "country": "India",
+  "timezone": "Asia/Kolkata",
+  "center": {
+    "latitude": 19.0760,
+    "longitude": 72.8777
+  },
+  "allowed_modes": ["BUS", "METRO", "WALK"],
+  "default_walking_speed_kmh": 4.5
+}

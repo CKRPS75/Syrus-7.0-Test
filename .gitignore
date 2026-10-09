@@ -1,40 +1,51 @@
-# Environment and secrets (CRITICAL: Never commit API keys)
-.env
-.env*.local
-*.key
-*.pem
-
-# Generated PDFs and PDF build scripts
-*.pdf
-generate_pdf_docs.py
-
-# Local testing and scratch scripts
-test_llm_connection.py
-test_live_llm_pipeline.py
-
-# Python bytecode & runtime cache
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
-.pytest_cache/
-.coverage
-htmlcov/
-*.log
-
-# IDE, editor & OS files
-.vscode/
-.idea/
-.DS_Store
-Thumbs.db
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
 
 # Virtual environments
 venv/
-env/
 .venv/
+ENV/
+env/
 
-# Build artifacts
-build/
-dist/
-*.egg-info/
+# IDE & Editors
+.vscode/
+.idea/
+*.swp
+*.swo
 
-node_modules/
+# Testing & Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Database
+*.sqlite3
+postgres_data/
+
+# OS
+.DS_Store
+Thumbs.db

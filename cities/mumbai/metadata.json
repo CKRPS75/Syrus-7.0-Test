@@ -1,0 +1,6 @@
+{
+  "city_id": "mumbai",
+  "version": "1.0.0",
+  "data_sources": ["gtfs-mock", "osm-mock", "crowd-reports-mock"],
+  "last_updated": "2026-10-08T00:00:00Z"
+}
