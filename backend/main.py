@@ -9,19 +9,22 @@ if BASE_DIR not in sys.path:
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from backend.evidence.router import router as evidence_router
+from backend.api.journey import router as journey_router
+from backend.api.replan import router as replan_router
+from backend.api.confirm import router as confirm_router
+from backend.api.tourist import router as tourist_router
 
 app = FastAPI(
-    title="TrustRoute API — Evidence & Trust Engine (Person 2)",
+    title="TrustRoute Master API",
     description=(
-        "Evidence-Aware Dynamic Multimodal Journey Planner.\n"
-        "Person 2 module processes crowd reports, independent news, and official alerts, "
-        "performs entity and temporal grounding, detects copy-rings and contradictions, "
-        "enforces the crowd-only cap (+2.6), and delivers Bayesian trust-weighted Disruption Events to Person 3."
+        "Evidence-Aware Dynamic Multimodal Journey Planning System for Greater Mumbai.\n"
+        "Integrates Bayesian Evidence Engine (P2), Multi-Modal OTP Routing & Replanning (P3), "
+        "Persona T5 Multi-Stop Tourist Optimizer, and User Confirmation."
     ),
-    version="1.0.0"
+    version="2.0.0"
 )
 
-# CORS setup
+# CORS setup for Next.js frontend
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -30,26 +33,32 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Mount Evidence Router
+# Mount Routers
+app.include_router(journey_router)
+app.include_router(replan_router)
+app.include_router(confirm_router)
 app.include_router(evidence_router)
-
+app.include_router(tourist_router)
 
 @app.get("/", tags=["Health"])
 async def root():
     return {
-        "service": "TrustRoute Evidence & Trust Engine",
+        "service": "TrustRoute Master System",
         "status": "online",
-        "city": "Mumbai",
+        "city": "Mumbai (MMR)",
         "docs_url": "/docs",
+        "personas_supported": ["T1 Commuter", "T2 Budget", "T3 Walking", "T4 Accessibility", "T5 Multi-Stop Tourist"],
         "endpoints": {
+            "plan_journey": "POST /journey/plan",
             "process_evidence": "POST /evidence/process",
-            "list_events": "GET /evidence/events",
-            "get_event": "GET /evidence/events/{event_id}",
-            "config_hash": "GET /evidence/config/hash"
+            "replan_journey": "POST /replan",
+            "confirm_route": "POST /confirm",
+            "tourist_attractions": "GET /tourist/attractions",
+            "plan_tour": "POST /tourist/plan",
+            "replan_tour": "POST /tourist/replan"
         }
     }
 
-
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("backend.main:app", host="127.0.0.1", port=8000, reload=True)
+    uvicorn.run("backend.main:app", host="0.0.0.0", port=8000, reload=True)

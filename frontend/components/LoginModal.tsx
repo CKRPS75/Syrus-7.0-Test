@@ -58,7 +58,7 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }: LoginMod
           <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-2">
             One-Click Test Personas
           </span>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             <button
               type="button"
               onClick={() => handlePresetPersona('Arjun (Business)')}
@@ -98,6 +98,16 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }: LoginMod
                 Karan • Accessible
               </span>
               <span className="text-[10px] text-slate-400">Elevator-only routing</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handlePresetPersona('T5 Tourist (Multi-Stop)')}
+              className="p-2.5 rounded-xl bg-slate-800/60 hover:bg-slate-800 border border-amber-500/40 text-left text-xs transition group col-span-2 sm:col-span-1"
+            >
+              <span className="font-semibold text-amber-300 block group-hover:text-amber-200 flex items-center gap-1">
+                <Sparkles className="w-3 h-3 text-amber-400" /> T5 • Tourist Day
+              </span>
+              <span className="text-[10px] text-slate-400">Multi-stop day tour</span>
             </button>
           </div>
         </div>

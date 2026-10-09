@@ -275,6 +275,94 @@
       "latitude": 19.2558,
       "longitude": 72.8683,
       "routes": ["METRO_2A", "METRO_7"]
+    },
+    {
+      "stop_id": "CHEMBUR",
+      "stop_name": "Chembur",
+      "aliases": ["chembur", "chembur station", "chembur naka", "chembur monorail"],
+      "latitude": 19.0622,
+      "longitude": 72.8974,
+      "routes": ["SUB_HARBOUR", "BEST"]
+    },
+    {
+      "stop_id": "COLABA",
+      "stop_name": "Colaba",
+      "aliases": ["colaba", "colaba causeway", "regal cinema", "electric house"],
+      "latitude": 18.9186,
+      "longitude": 72.8284,
+      "routes": ["BEST"]
+    },
+    {
+      "stop_id": "MULUND",
+      "stop_name": "Mulund",
+      "aliases": ["mulund", "mulund station", "mulund west", "mulund east"],
+      "latitude": 19.1726,
+      "longitude": 72.9565,
+      "routes": ["SUB_CENTRAL"]
+    },
+    {
+      "stop_id": "BHANDUP",
+      "stop_name": "Bhandup",
+      "aliases": ["bhandup", "bhandup station"],
+      "latitude": 19.1437,
+      "longitude": 72.9372,
+      "routes": ["SUB_CENTRAL"]
+    },
+    {
+      "stop_id": "VIKHROLI",
+      "stop_name": "Vikhroli",
+      "aliases": ["vikhroli", "vikhroli station", "vikhroli east"],
+      "latitude": 19.1105,
+      "longitude": 72.9256,
+      "routes": ["SUB_CENTRAL"]
+    },
+    {
+      "stop_id": "SION",
+      "stop_name": "Sion",
+      "aliases": ["sion", "sion station", "sion circle"],
+      "latitude": 19.0390,
+      "longitude": 72.8619,
+      "routes": ["SUB_CENTRAL"]
+    },
+    {
+      "stop_id": "LOWER_PAREL",
+      "stop_name": "Lower Parel",
+      "aliases": ["lower parel", "lower parel station", "high street phoenix"],
+      "latitude": 18.9953,
+      "longitude": 72.8306,
+      "routes": ["SUB_WESTERN"]
+    },
+    {
+      "stop_id": "MUMBAI_CENTRAL",
+      "stop_name": "Mumbai Central",
+      "aliases": ["mumbai central", "mumbai central terminus", "bct"],
+      "latitude": 18.9698,
+      "longitude": 72.8193,
+      "routes": ["SUB_WESTERN"]
+    },
+    {
+      "stop_id": "GRANT_ROAD",
+      "stop_name": "Grant Road",
+      "aliases": ["grant road", "grant road station", "lamington road"],
+      "latitude": 18.9634,
+      "longitude": 72.8160,
+      "routes": ["SUB_WESTERN"]
+    },
+    {
+      "stop_id": "CHARNI_ROAD",
+      "stop_name": "Charni Road (Girgaon)",
+      "aliases": ["charni road", "charni road station", "girgaon chowpatty station"],
+      "latitude": 18.9518,
+      "longitude": 72.8188,
+      "routes": ["SUB_WESTERN"]
+    },
+    {
+      "stop_id": "MARINE_LINES",
+      "stop_name": "Marine Lines",
+      "aliases": ["marine lines", "marine lines station"],
+      "latitude": 18.9438,
+      "longitude": 72.8239,
+      "routes": ["SUB_WESTERN"]
     }
   ]
 }
