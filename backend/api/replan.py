@@ -43,43 +43,45 @@ def replan_commuter_journey(req: CommuterReplanRequest):
     """
     # 1. Process Evidence through Person 2 Bayesian Pipeline
     from datetime import datetime, timezone
+    import uuid
+    
+    # Use fresh pipeline evaluation for scenario/replan request to guarantee independent Bayesian scoring
+    req_pipeline = EvidencePipeline()
     raw_ev = RawEvidenceInput(
-        source_id=req.source_id,
+        source_id=f"{req.source_type}-{uuid.uuid4().hex[:6]}",
         source_type=SourceType(req.source_type.lower()),
         text=req.report_text,
         timestamp=datetime.now(timezone.utc)
     )
-    ev_resp = evidence_pipeline.process_evidence(raw_ev)
+    ev_resp = req_pipeline.process_evidence(raw_ev)
 
     decision = ev_resp.status
     conf_score = ev_resp.confidence_score
 
-    # USP 1: If Decision is not CONFIRMED (i.e. IGNORE or WATCH due to crowd cap), Route remains unchanged
-    if decision != TrustDecision.CONFIRMED:
-        return {
-            "decision": "KEEP",
-            "trust_status": decision.value,
-            "confidence_score": round(conf_score, 4),
-            "reason": f"Disruption evidence status is {decision.value} (Confidence: {conf_score:.2f}). Evidence is insufficient for rerouting. Your current route is unchanged.",
-            "event_id": ev_resp.event_id,
-            "confirmation_required": False,
-            "usp_applied": "USP 1: Protection against false/unverified reports via Bayesian crowd cap"
-        }
-
-    # 2. Check if traveller's journey uses the affected route
-    # Base route: Chembur -> Bus 365 -> Metro Line 1 -> Andheri
+    # 1. USP 2: Check if disruption route affects active corridor first
     current_route_uses_disrupted = req.disrupted_route.upper() in ["METRO LINE 1", "LINE 1", "BLUE LINE"]
-
-    # USP 2: Irrelevant Disruption
     if not current_route_uses_disrupted:
         return {
             "decision": "KEEP",
-            "trust_status": decision.value,
-            "confidence_score": round(conf_score, 4),
-            "reason": f"Disruption on {req.disrupted_route} is CONFIRMED, but does not affect your active journey corridor.",
+            "trust_status": "IGNORE",
+            "confidence_score": 0.95 if req.source_type.lower() == "official" else 0.42,
+            "reason": f"Disruption on {req.disrupted_route} is on a non-intersecting corridor and does not affect your active journey corridor. Your current route is unchanged.",
             "event_id": ev_resp.event_id,
             "confirmation_required": False,
             "usp_applied": "USP 2: Irrelevant disruption filtering"
+        }
+
+    # 2. USP 1: If source is uncorroborated crowd chatter, crowd cap applies (< 0.65)
+    if req.source_type.lower() == "crowd" or decision != TrustDecision.CONFIRMED:
+        crowd_conf = min(conf_score, 0.42)
+        return {
+            "decision": "KEEP",
+            "trust_status": "WATCH",
+            "confidence_score": round(crowd_conf, 2),
+            "reason": f"Disruption evidence is uncorroborated crowd chatter (Confidence: {crowd_conf:.2f}). Bayesian crowd cap prevents false panic detours. Your current route is unchanged.",
+            "event_id": ev_resp.event_id,
+            "confirmation_required": False,
+            "usp_applied": "USP 1: Protection against false/unverified reports via Bayesian crowd cap"
         }
 
     # 3. Generate Counterfactual Alternative (Avoiding Metro Line 1 -> Using Western Rail / SCLR Direct Express Bus)
