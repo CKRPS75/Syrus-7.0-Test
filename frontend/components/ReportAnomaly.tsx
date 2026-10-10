@@ -67,6 +67,17 @@ export default function ReportAnomaly() {
     }
   };
 
+  const getDynamicSignalWeight = () => {
+    let w = severity === 'HIGH' ? 1.2 : severity === 'MEDIUM' ? 0.8 : 0.4;
+    if (accessibilityImpact) w += 0.3;
+    if (category.includes('Flooding') || category.includes('Breakdown')) w += 0.2;
+    return Math.min(Number(w.toFixed(1)), 2.6);
+  };
+
+  const signalWeight = getDynamicSignalWeight();
+  const estimatedPStar = Math.min(0.59, Number((0.40 + (signalWeight / 2.6) * 0.19).toFixed(2)));
+  const dynamicStatus = signalWeight >= 0.8 ? 'WATCH (Warning Only)' : 'IGNORE (Filtered)';
+
   return (
     <section className="grid items-start gap-6 xl:grid-cols-12">
       <form onSubmit={handleSubmit} className="space-y-5 rounded-[28px] border border-rose-200 bg-rose-50/60 p-5 shadow-sm sm:p-8 xl:col-span-7">
@@ -151,10 +162,11 @@ export default function ReportAnomaly() {
         <h2 className="flex items-center gap-2 text-[11px] font-extrabold tracking-wide text-indigo-700"><ShieldCheck className="h-4 w-4" /> BAYESIAN EVIDENCE PIPELINE PREVIEW</h2>
         <p className="mt-4 text-xs leading-relaxed text-slate-600">Your report will be ingested as a raw evidence signal with anti-rumor guardrails applied automatically:</p>
         <div className="mt-5 space-y-3 rounded-2xl border border-indigo-100 bg-white/80 p-4 text-xs">
-          <div className="flex justify-between gap-3"><span className="text-slate-500">Signal Contribution:</span><strong className="text-indigo-600">+0.8 Evidence Weight</strong></div>
+          <div className="flex justify-between gap-3"><span className="text-slate-500">Signal Contribution:</span><strong className="text-indigo-600">+{signalWeight} Evidence Weight</strong></div>
           <div className="flex justify-between gap-3"><span className="text-slate-500">Crowd Cap Guardrail:</span><strong className="text-slate-700">+2.6 Maximum Total</strong></div>
           <div className="flex justify-between gap-3"><span className="text-slate-500">Confirmation Threshold:</span><strong className="text-emerald-600">P* ≥ 0.65</strong></div>
-          <div className="flex justify-between gap-3"><span className="text-slate-500">Initial Status:</span><strong className="text-amber-600">WATCH (Warning Only)</strong></div>
+          <div className="flex justify-between gap-3"><span className="text-slate-500">Estimated Posterior (P*):</span><strong className="text-indigo-700">{Math.round(estimatedPStar * 100)}%</strong></div>
+          <div className="flex justify-between gap-3"><span className="text-slate-500">Initial Status:</span><strong className={dynamicStatus.includes('WATCH') ? 'text-amber-600' : 'text-slate-600'}>{dynamicStatus}</strong></div>
         </div>
         <div className="mt-4 flex gap-2 rounded-2xl border border-indigo-200 bg-indigo-100/80 p-4 text-xs leading-relaxed text-indigo-800">
           <Info className="mt-0.5 h-4 w-4 shrink-0" />

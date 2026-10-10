@@ -367,7 +367,7 @@ export default function ReportAnomalyPage() {
             <div className="p-3 bg-white/80 dark:bg-slate-800/60 rounded-2xl border border-indigo-100 dark:border-indigo-900/40 space-y-2">
               <div className="flex justify-between font-semibold">
                 <span className="text-slate-500">Signal Contribution:</span>
-                <span className="text-indigo-600 font-bold">+0.8 Evidence Weight</span>
+                <span className="text-indigo-600 font-bold">+{severity === 'HIGH' ? '1.2' : severity === 'MEDIUM' ? '0.8' : '0.4'} Evidence Weight</span>
               </div>
               <div className="flex justify-between font-semibold">
                 <span className="text-slate-500">Crowd Cap Guardrail:</span>
@@ -378,8 +378,12 @@ export default function ReportAnomalyPage() {
                 <span className="text-emerald-600 font-bold">P* ≥ 0.65</span>
               </div>
               <div className="flex justify-between font-semibold">
+                <span className="text-slate-500">Estimated Posterior (P*):</span>
+                <span className="text-indigo-700 font-bold">{severity === 'HIGH' ? '54%' : severity === 'MEDIUM' ? '46%' : '38%'}</span>
+              </div>
+              <div className="flex justify-between font-semibold">
                 <span className="text-slate-500">Initial Status:</span>
-                <span className="text-amber-500 font-bold">WATCH (Warning Only)</span>
+                <span className={severity === 'LOW' ? 'text-slate-500 font-bold' : 'text-amber-500 font-bold'}>{severity === 'LOW' ? 'IGNORE (Low Signal)' : 'WATCH (Warning Only)'}</span>
               </div>
             </div>
 
