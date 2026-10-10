@@ -117,7 +117,7 @@ class EvidencePipeline:
         event_id, cluster, is_new_event = self.dedup.assign_event(grounded)
 
         # 6. Independence & Copy-Ring Check
-        existing_items = [item for item in cluster.evidence_items if item.extracted.source_id != raw_input.source_id]
+        existing_items = cluster.evidence_items[:-1]
         provenance = self.independence.evaluate_independence(grounded, existing_items)
 
         if event_id not in self.provenance_store:

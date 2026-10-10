@@ -1,0 +1,12 @@
+{
+  "audit_timestamp": "2026-10-09T19:21:04.015673+00:00",
+  "git_commit": "c1ce23b58b47e5f4367e76f4c2ce28c096f6e7cb",
+  "random_seed": 42,
+  "python_version": "3.10.0 (tags/v3.10.0:b494f59, Oct  4 2021, 19:00:18) [MSC v.1929 64 bit (AMD64)]",
+  "platform": "win32",
+  "parameter_hash_sha256": "14b84cbd300a729141126da20dbe26fa7f50aebd6b0fd237fe27270c94b247ea",
+  "reference_data_sha256": "4de3f110f927ad06d73d40c88a48e3c525912e8fd3caff3734b937d1e4faf202",
+  "benchmark_dataset_sha256": "a852ca78138868252b14efc4adee1e51742130b9a29b167e5049ba3eae810b94",
+  "otp_engine_version": "2.10.x-compatible",
+  "evaluator_version": "2.0.0"
+}

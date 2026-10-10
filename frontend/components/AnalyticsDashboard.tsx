@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Activity,
   Clock3,
@@ -9,6 +9,7 @@ import {
   TriangleAlert,
   Wallet,
 } from 'lucide-react';
+import { fetchAnalyticsStats, fetchVulnerabilityMatrix } from '../lib/api';
 
 type ModeFilter = 'ALL' | 'RAIL' | 'METRO' | 'BUS';
 
@@ -20,7 +21,7 @@ const emissions = [
   { mode: 'Pedestrian / Walking', icon: '↟', grams: 0, color: 'bg-emerald-500', text: 'text-emerald-600' },
 ];
 
-const corridors = [
+const defaultCorridors = [
   { corridor: 'Kurla Interchange (Central/Harbour)', mode: 'RAIL', issue: 'Signal Interlocking & Track Flooding', risk: 'CRITICAL', delay: '+34m', cause: 'Low track elevation + high interlocking switch density' },
   { corridor: 'Ghatkopar Metro Station (East-West)', mode: 'METRO', issue: 'Door Obstruction & Platform Overcrowding', risk: 'HIGH', delay: '+18m', cause: 'Crush load surge from Central Railway transfers' },
   { corridor: 'BKC Feeder Arterial (SCLR & Connector)', mode: 'BUS', issue: 'Surface Gridlock & Bus Bunching', risk: 'HIGH', delay: '+26m', cause: 'Narrow entry funnels into corporate financial hub' },
@@ -28,16 +29,42 @@ const corridors = [
   { corridor: 'Andheri Subway & West Approach', mode: 'BUS', issue: 'Monsoon Sump Waterlogging', risk: 'CRITICAL', delay: '+45m', cause: 'Underpass drainage saturation forcing multi-km detours' },
 ];
 
-const metricCards = [
-  { label: 'NET CO₂ ABATEMENT', value: '-1,842', unit: 'kg', detail: 'Equivalent to 88 trees planted vs. private cab baselines.', icon: Leaf, style: 'border-emerald-200 bg-emerald-50 text-emerald-700' },
-  { label: 'RUMORS FILTERED', value: '47', unit: 'Blocked', detail: 'Crowd reports capped at +2.6 to prevent unverified panic detours.', icon: ShieldCheck, style: 'border-amber-200 bg-amber-50 text-amber-700' },
-  { label: 'COMMUTE DELAY AVERTED', value: '27.4', unit: 'min/rider', detail: 'Average delay saved when passengers accept dynamic rerouting.', icon: Clock3, style: 'border-sky-200 bg-sky-50 text-sky-700' },
-  { label: 'AVG COMMUTE COST', value: '₹38.50', unit: '-78% vs Cab', detail: 'Public bus + train integration guarantees hard budget constraints.', icon: Wallet, style: 'border-purple-200 bg-purple-50 text-purple-700' },
-];
-
 export default function AnalyticsDashboard() {
   const [filter, setFilter] = useState<ModeFilter>('ALL');
+  const [stats, setStats] = useState<any>(null);
+  const [corridors, setCorridors] = useState<any[]>(defaultCorridors);
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const s = await fetchAnalyticsStats();
+        if (s) setStats(s);
+        const v = await fetchVulnerabilityMatrix();
+        if (v && v.length > 0) {
+          setCorridors(v.map(item => ({
+            corridor: item.corridor,
+            mode: item.mode,
+            issue: item.dominantFailure || item.issue,
+            risk: item.riskLevel || item.risk,
+            delay: item.avgDelayMin !== undefined ? `+${item.avgDelayMin}m` : item.delay,
+            cause: item.primaryCause || item.cause,
+          })));
+        }
+      } catch (err) {
+        console.warn('Analytics loading error notice:', err);
+      }
+    }
+    load();
+  }, []);
+
   const filteredCorridors = corridors.filter((row) => filter === 'ALL' || row.mode === filter);
+
+  const metricCards = [
+    { label: 'NET CO₂ ABATEMENT', value: stats?.net_co2_abatement_kg ? `-${Number(stats.net_co2_abatement_kg).toLocaleString()}` : '-1,842', unit: 'kg', detail: `Equivalent to ${stats?.trees_planted_equivalent || 88} trees planted vs. private cab baselines.`, icon: Leaf, style: 'border-emerald-200 bg-emerald-50 text-emerald-700' },
+    { label: 'RUMORS FILTERED', value: `${stats?.rumors_filtered || 47}`, unit: 'Blocked', detail: 'Crowd reports capped at +2.6 to prevent unverified panic detours.', icon: ShieldCheck, style: 'border-amber-200 bg-amber-50 text-amber-700' },
+    { label: 'COMMUTE DELAY AVERTED', value: `${stats?.commute_delay_averted_min || 27.4}`, unit: 'min/rider', detail: 'Average delay saved when passengers accept dynamic rerouting.', icon: Clock3, style: 'border-sky-200 bg-sky-50 text-sky-700' },
+    { label: 'AVG COMMUTE COST', value: stats?.avg_commute_cost_inr ? `₹${Number(stats.avg_commute_cost_inr).toFixed(2)}` : '₹38.50', unit: `-${stats?.cab_savings_percent || 78}% vs Cab`, detail: 'Public bus + train integration guarantees hard budget constraints.', icon: Wallet, style: 'border-purple-200 bg-purple-50 text-purple-700' },
+  ];
 
   return (
     <section className="space-y-6 text-slate-800">

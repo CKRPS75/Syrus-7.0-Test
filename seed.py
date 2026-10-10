@@ -13,7 +13,8 @@ from app.db.models import (
 
 
 def seed_data():
-    print("Seeding development database...")
+    print("Ensuring database tables exist and seeding development data...")
+    Base.metadata.create_all(bind=engine)
     db = SessionLocal()
 
     try:

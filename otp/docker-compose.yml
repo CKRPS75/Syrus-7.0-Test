@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  otp:
+    image: docker.io/opentripplanner/opentripplanner:2.5.0
+    container_name: trustroute_otp
+    ports:
+      - "8080:8080"
+    environment:
+      - JAVA_OPTS=-Xmx4G
+    volumes:
+      - ./data:/var/opentripplanner
+    command:
+      - --build
+      - --serve
+      - /var/opentripplanner
+    restart: unless-stopped

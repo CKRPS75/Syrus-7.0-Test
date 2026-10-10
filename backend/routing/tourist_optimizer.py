@@ -374,8 +374,9 @@ def simulate_tour(
     return legs, visit_windows, total_travel_min, total_dwell_min, total_transit_fare, total_ticket_fare, total_walk_m, slack_buffer
 
 def plan_tourist_itinerary(request: PlanTourRequest) -> TourPlanResponse:
+    loc_name = request.start_location_name or request.start_location or "Kalyan"
     origin_base = resolve_start_location(
-        request.start_location_name,
+        loc_name,
         request.custom_start_lat,
         request.custom_start_lon
     )

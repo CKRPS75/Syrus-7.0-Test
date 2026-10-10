@@ -12,6 +12,20 @@ class LocationPoint(BaseModel):
     longitude: float = Field(..., example=72.8464)
 
 
+class JourneyRequest(BaseModel):
+    origin: str = Field(..., example="Chembur")
+    destination: str = Field(..., example="Andheri")
+    departure: str = Field(default="2026-10-09T17:00:00", example="5:00 PM")
+    deadline: Optional[str] = Field(default=None, example="7:00 PM")
+    budget: Optional[float] = Field(default=80.0, example=80.0)
+    max_walking: Optional[int] = Field(default=1000, example=1000)
+    accessibility_required: bool = Field(default=False)
+    allowed_modes: Optional[List[str]] = Field(default=["BUS", "METRO", "WALK"])
+    forbidden_modes: Optional[List[str]] = Field(default_factory=list)
+    transfer_tolerance: Optional[int] = Field(default=3)
+    risk_tolerance: Optional[float] = Field(default=0.5)
+
+
 class JourneyPlanRequest(BaseModel):
     traveller_id: uuid.UUID
     origin: LocationPoint

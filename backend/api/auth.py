@@ -97,6 +97,11 @@ def get_connection() -> Iterator[object]:
     database_url = os.getenv("DATABASE_URL", "").strip()
     if not database_url:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="AUTH_DATABASE_NOT_CONFIGURED")
+    # Normalize SQLAlchemy driver prefix if present
+    if database_url.startswith("postgresql+psycopg://"):
+        database_url = database_url.replace("postgresql+psycopg://", "postgresql://", 1)
+    elif database_url.startswith("postgresql+asyncpg://"):
+        database_url = database_url.replace("postgresql+asyncpg://", "postgresql://", 1)
     try:
         import psycopg
     except ImportError as error:

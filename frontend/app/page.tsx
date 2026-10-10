@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
@@ -24,7 +24,8 @@ import {
   MOCK_ALTERNATIVE_JOURNEY,
 } from '../lib/mockData';
 import { JourneyPlanResponse, DisruptionAlert, TravellerConstraints } from '../types';
-import { fetchBaseJourney } from '../lib/api';
+import { fetchBaseJourney, fetchReplanProposal, confirmRoute, fetchAnalyticsStats, fetchVulnerabilityMatrix } from '../lib/api';
+import { computeCarbonMetrics } from '../lib/carbonCalculator';
 import { AuthenticatedUser, logout as signOut } from '../lib/auth';
 import {
   Compass,
@@ -84,12 +85,32 @@ export default function Home() {
   const [isPlanning, setIsPlanning] = useState(false);
   const [planningError, setPlanningError] = useState('');
 
+  const [analyticsStats, setAnalyticsStats] = useState<any>(null);
+  const [vulnerabilities, setVulnerabilities] = useState<any[]>([]);
+
   const [journey, setJourney] = useState<JourneyPlanResponse | null>(null);
   const [disruption, setDisruption] = useState<DisruptionAlert | null>(null);
+  const [alternativeJourney, setAlternativeJourney] = useState<JourneyPlanResponse | null>(null);
+  const [activeProposalId, setActiveProposalId] = useState<string | null>(null);
   const [showAlternative, setShowAlternative] = useState(false);
   const [isExplainOpen, setIsExplainOpen] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [currentScenario, setCurrentScenario] = useState<'A' | 'B' | 'C'>('B');
+
+  // Fetch live system analytics and vulnerability matrix from PostgreSQL database
+  useEffect(() => {
+    async function loadDynamicAnalytics() {
+      try {
+        const stats = await fetchAnalyticsStats();
+        if (stats) setAnalyticsStats(stats);
+        const vulns = await fetchVulnerabilityMatrix();
+        if (vulns && vulns.length > 0) setVulnerabilities(vulns);
+      } catch (err) {
+        console.warn('Analytics loading error notice:', err);
+      }
+    }
+    loadDynamicAnalytics();
+  }, [viewState, activeTab]);
 
   // Synchronize Dark / Light mode with <html> class
   useEffect(() => {
@@ -137,9 +158,13 @@ export default function Home() {
     setPlanningError('');
     setShowAlternative(false);
 
+    const activeTraveller = currentUser?.name || currentUser?.email || 'Piyush Kandhari';
+
     try {
-      const plannedJourney = await fetchBaseJourney(formData);
+      const plannedJourney = await fetchBaseJourney(formData, activeTraveller);
       setJourney(plannedJourney);
+      // Refresh dynamic analytics stats since a new journey was saved
+      fetchAnalyticsStats().then((s) => s && setAnalyticsStats(s)).catch(() => {});
       setTimeout(() => triggerScenario(currentScenario, false), 800);
     } catch {
       setJourney(MOCK_BASE_JOURNEY);
@@ -151,26 +176,139 @@ export default function Home() {
     }
   };
 
-  const triggerScenario = (scenario: 'A' | 'B' | 'C', useFallbackJourney = true) => {
+  const triggerScenario = async (scenario: 'A' | 'B' | 'C', useFallbackJourney = true) => {
     setCurrentScenario(scenario);
+    const activeBaseJourney = journey || (useFallbackJourney ? MOCK_BASE_JOURNEY : null);
     if (!journey && useFallbackJourney) setJourney(MOCK_BASE_JOURNEY);
 
+    const baseConstraints: TravellerConstraints = {
+      origin: activeBaseJourney?.summary.origin || 'Chembur',
+      destination: activeBaseJourney?.summary.destination || 'Andheri',
+      departureTime: activeBaseJourney?.summary.departureTime || new Date().toISOString(),
+      accessibilityRequired: false,
+      allowedModes: ['BUS', 'METRO', 'TRAIN', 'WALK']
+    };
+
     if (scenario === 'A') {
-      setDisruption(SCENARIO_CONFIRMED);
-      setShowAlternative(true);
+      try {
+        const proposal = await fetchReplanProposal(
+          baseConstraints,
+          'Official Alert: Overhead electrical traction breakdown on Metro Line 1 near Asalpha. All metro train operations suspended.',
+          'official'
+        );
+        if (proposal && proposal.decision === 'PROPOSE' && proposal.alternative_itinerary) {
+          const alt = proposal.alternative_itinerary;
+          const altLegs = (alt.legs || []).map((l: any) => ({
+            mode: l.mode,
+            lineName: l.route_name,
+            fromName: l.from_place,
+            toName: l.to_place,
+            durationMin: l.duration_min,
+            distanceMeters: l.distance_m,
+            coordinates: l.coordinates || [[72.8467, 19.1205], [72.8569, 19.1158]],
+            stops: l.stops || []
+          }));
+          const altCarbon = computeCarbonMetrics(altLegs, alt.total_fare || 55);
+          const dynamicAltJourney: JourneyPlanResponse = {
+            journeyId: proposal.proposal_id || 'MUM-PROP-001',
+            summary: {
+              origin: baseConstraints.origin,
+              destination: baseConstraints.destination,
+              departureTime: activeBaseJourney?.summary.departureTime || '05:30 PM',
+              arrivalTime: alt.arrival_time || '06:48 PM',
+              fare: alt.total_fare || 55,
+              walkingMeters: alt.walking_m || 700,
+              transfers: alt.transfers || 2,
+              status: 'PROTECTED',
+              carbon: altCarbon
+            },
+            legs: altLegs
+          };
+          setAlternativeJourney(dynamicAltJourney);
+          setActiveProposalId(proposal.proposal_id);
+          setDisruption({
+            eventId: proposal.event_id || 'EVT-001',
+            title: 'Overhead Traction Breakdown (Metro Line 1)',
+            status: 'CONFIRMED',
+            confidenceScore: proposal.confidence_score || 0.98,
+            severity: 'HIGH',
+            impactsCurrentRoute: true,
+            affectedEntity: 'Metro Line 1 (Ghatkopar - Versova)',
+            evidenceSources: ['Official MMRDA Traffic Desk', 'Western Railway Operations'],
+            explanation: proposal.reason || 'Disruption is confirmed. An alternative avoiding Metro Line 1 saves ~27 mins.',
+            delayEstimateMin: proposal.time_saved_min || 27
+          });
+          setShowAlternative(true);
+        } else {
+          setDisruption(SCENARIO_CONFIRMED);
+          setAlternativeJourney(MOCK_ALTERNATIVE_JOURNEY);
+          setShowAlternative(true);
+        }
+      } catch {
+        setDisruption(SCENARIO_CONFIRMED);
+        setAlternativeJourney(MOCK_ALTERNATIVE_JOURNEY);
+        setShowAlternative(true);
+      }
     } else if (scenario === 'B') {
-      setDisruption(SCENARIO_WATCH_RUMOR);
+      try {
+        const proposal = await fetchReplanProposal(
+          baseConstraints,
+          'Passenger tweet: Someone told me Metro Line 1 is stuck for 15 mins maybe?',
+          'crowd'
+        );
+        setDisruption({
+          eventId: proposal.event_id || 'EVT-CROWD-RUMOR',
+          title: 'Uncorroborated Passenger Chatter (Metro Line 1)',
+          status: 'WATCH',
+          confidenceScore: proposal.confidence_score || 0.42,
+          severity: 'LOW',
+          impactsCurrentRoute: false,
+          affectedEntity: 'Metro Line 1',
+          evidenceSources: ['Single Crowd Submission (Unverified)'],
+          explanation: proposal.reason || 'Uncorroborated single passenger post. Bayesian crowd confidence is capped below 65% rerouting threshold.',
+          delayEstimateMin: 0
+        });
+      } catch {
+        setDisruption(SCENARIO_WATCH_RUMOR);
+      }
       setShowAlternative(false);
     } else if (scenario === 'C') {
-      setDisruption(SCENARIO_IRRELEVANT);
+      try {
+        const proposal = await fetchReplanProposal(
+          baseConstraints,
+          'Official Alert: Signal disruption and track waterlogging on Harbour suburban rail line near Belapur.',
+          'official'
+        );
+        setDisruption({
+          eventId: proposal.event_id || 'EVT-OFF-ROUTE',
+          title: 'Harbour Line Waterlogging Disruption',
+          status: 'IGNORE',
+          confidenceScore: proposal.confidence_score || 0.95,
+          severity: 'HIGH',
+          impactsCurrentRoute: false,
+          affectedEntity: 'Harbour Suburban Line (Belapur)',
+          evidenceSources: ['Central Railway Advisory Desk'],
+          explanation: proposal.reason || 'Confirmed disruption on Harbour Line, but your active travel corridor does not intersect this corridor.',
+          delayEstimateMin: 0
+        });
+      } catch {
+        setDisruption(SCENARIO_IRRELEVANT);
+      }
       setShowAlternative(false);
     }
   };
 
-  const handleAcceptReroute = () => {
+  const handleAcceptReroute = async () => {
     setIsUpdating(true);
+    if (activeProposalId) {
+      try {
+        await confirmRoute(activeProposalId, true);
+      } catch (e) {
+        console.warn('Confirm route endpoint notice:', e);
+      }
+    }
     setTimeout(() => {
-      setJourney(MOCK_ALTERNATIVE_JOURNEY);
+      setJourney(alternativeJourney || MOCK_ALTERNATIVE_JOURNEY);
       setShowAlternative(false);
       setDisruption(null);
       setIsUpdating(false);
@@ -188,7 +326,7 @@ export default function Home() {
     setShowAlternative(false);
   };
 
-  // Vulnerability dataset
+  // Fallback vulnerability dataset if backend is loading
   const vulnerabilityData = [
     {
       corridor: 'Kurla Interchange (Central/Harbour)',
@@ -237,7 +375,8 @@ export default function Home() {
     },
   ];
 
-  const filteredVulnerabilities = vulnerabilityData.filter((item) => {
+  const activeVulnerabilities = vulnerabilities.length > 0 ? vulnerabilities : vulnerabilityData;
+  const filteredVulnerabilities = activeVulnerabilities.filter((item) => {
     if (selectedRegionFilter === 'ALL') return true;
     return item.mode === selectedRegionFilter;
   });
@@ -402,10 +541,10 @@ export default function Home() {
                       <Leaf className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" /> Net CO₂ Abatement
                     </span>
                     <div className="text-2xl font-extrabold text-slate-900 dark:text-white">
-                      -1,842 <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">kg</span>
+                      {analyticsStats?.net_co2_abatement_kg ? `-${Number(analyticsStats.net_co2_abatement_kg).toLocaleString()}` : '-1,842'} <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">kg</span>
                     </div>
                     <p className="text-[10px] text-slate-600 dark:text-slate-400 leading-tight">
-                      Equivalent to <strong>88 trees planted</strong> vs. private cab baselines.
+                      Equivalent to <strong>{analyticsStats?.trees_planted_equivalent || 88} trees planted</strong> vs. private cab baselines.
                     </p>
                   </div>
 
@@ -415,7 +554,7 @@ export default function Home() {
                       <ShieldCheck className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" /> Rumors Filtered
                     </span>
                     <div className="text-2xl font-extrabold text-slate-900 dark:text-white">
-                      47 <span className="text-sm font-semibold text-amber-600 dark:text-amber-400">Blocked</span>
+                      {analyticsStats?.rumors_filtered || 47} <span className="text-sm font-semibold text-amber-600 dark:text-amber-400">Blocked</span>
                     </div>
                     <p className="text-[10px] text-slate-600 dark:text-slate-400 leading-tight">
                       Crowd reports capped at +2.6 to prevent unverified panic detours.
@@ -428,7 +567,7 @@ export default function Home() {
                       <Clock className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" /> Commute Delay Averted
                     </span>
                     <div className="text-2xl font-extrabold text-slate-900 dark:text-white">
-                      27.4 <span className="text-sm font-semibold text-sky-600 dark:text-sky-400">min/rider</span>
+                      {analyticsStats?.commute_delay_averted_min || 27.4} <span className="text-sm font-semibold text-sky-600 dark:text-sky-400">min/rider</span>
                     </div>
                     <p className="text-[10px] text-slate-600 dark:text-slate-400 leading-tight">
                       Average delay saved when passengers accept dynamic rerouting.
@@ -441,7 +580,7 @@ export default function Home() {
                       <IndianRupee className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" /> Avg Commute Cost
                     </span>
                     <div className="text-2xl font-extrabold text-slate-900 dark:text-white">
-                      ₹38.50 <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">-78% vs Cab</span>
+                      {analyticsStats?.avg_commute_cost_inr ? `₹${Number(analyticsStats.avg_commute_cost_inr).toFixed(2)}` : '₹38.50'} <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">-{analyticsStats?.cab_savings_percent || 78}% vs Cab</span>
                     </div>
                     <p className="text-[10px] text-slate-600 dark:text-slate-400 leading-tight">
                       Public bus + train integration guarantees hard budget constraints.
@@ -464,7 +603,7 @@ export default function Home() {
                         </p>
                       </div>
                       <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
-                        -81.3% Eco-Efficiency
+                        -{analyticsStats?.eco_efficiency_percent || 81.3}% Eco-Efficiency
                       </span>
                     </div>
 
@@ -640,26 +779,26 @@ export default function Home() {
                               </span>
                             </td>
                             <td className="py-3 px-3 text-slate-700 dark:text-slate-300">
-                              {row.dominantFailure}
+                              {row.dominantFailure || row.issue}
                             </td>
                             <td className="py-3 px-3">
                               <span
                                 className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                                  row.riskLevel === 'CRITICAL'
+                                  (row.riskLevel || row.risk) === 'CRITICAL'
                                     ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/30'
-                                    : row.riskLevel === 'HIGH'
+                                    : (row.riskLevel || row.risk) === 'HIGH'
                                     ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30'
                                     : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
                                 }`}
                               >
-                                {row.riskLevel}
+                                {row.riskLevel || row.risk}
                               </span>
                             </td>
                             <td className="py-3 px-3 font-bold text-slate-900 dark:text-white">
-                              +{row.avgDelayMin}m
+                              {row.avgDelayMin !== undefined ? `+${row.avgDelayMin}m` : (row.delay || '+25m')}
                             </td>
                             <td className="py-3 px-3 text-slate-500 dark:text-slate-400 text-[11px]">
-                              {row.primaryCause}
+                              {row.primaryCause || row.cause}
                             </td>
                           </tr>
                         ))}
@@ -744,7 +883,7 @@ export default function Home() {
                         >
                           <RouteComparison
                             currentRoute={journey}
-                            alternativeRoute={MOCK_ALTERNATIVE_JOURNEY}
+                            alternativeRoute={alternativeJourney || MOCK_ALTERNATIVE_JOURNEY}
                             delayMin={disruption.delayEstimateMin || 35}
                           />
                           <ConfirmPrompt

@@ -1,5 +1,6 @@
 export type DisruptionStatus = 'IGNORE' | 'WATCH' | 'CONFIRMED' | 'RESOLVED';
 export type TransitMode = 'BUS' | 'METRO' | 'TRAIN' | 'WALK';
+export type AnomalyType = 'VEHICLE_BREAKDOWN' | 'SIGNAL_FAILURE' | 'WATERLOGGING' | 'OVERCROWDING' | 'ACCIDENT' | 'STRIKE' | 'OTHER';
 
 export interface TravellerConstraints {
   origin: string;
@@ -73,13 +74,16 @@ export interface TouristAttraction {
   name: string;
   category: string;
   lat: number;
-  lon: number;
-  open_time: string;
-  close_time: string;
-  typical_dwell_minutes: number;
-  priority: 'HIGH' | 'MEDIUM' | 'LOW' | 'FIXED';
-  fare_inr: number;
-  description: string;
+  lon?: number;
+  lng?: number;
+  open_time?: string;
+  close_time?: string;
+  typical_dwell_minutes?: number;
+  estimatedVisitMin?: number;
+  priority?: 'HIGH' | 'MEDIUM' | 'LOW' | 'FIXED';
+  fare_inr?: number;
+  entryFee?: number;
+  description?: string;
 }
 
 export interface PlannedTourLeg {

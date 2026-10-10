@@ -118,8 +118,8 @@ function getStops(stops: unknown): JourneyStop[] {
   });
 }
 
-export async function fetchBaseJourney(constraints: TravellerConstraints): Promise<JourneyPlanResponse> {
-  const payload = {
+export async function fetchBaseJourney(constraints: TravellerConstraints, travellerName?: string): Promise<JourneyPlanResponse> {
+  const payload: Record<string, any> = {
     origin: constraints.origin,
     destination: constraints.destination,
     departure: constraints.departureTime || new Date().toISOString(),
@@ -128,10 +128,18 @@ export async function fetchBaseJourney(constraints: TravellerConstraints): Promi
     max_walking: constraints.maxWalkingMeters,
     accessibility_required: constraints.accessibilityRequired,
     allowed_modes: constraints.allowedModes,
-    forbidden_modes: []
+    forbidden_modes: [],
   };
 
-  const res = await fetch(`${API_BASE_URL}/journey/plan`, {
+  if (travellerName) {
+    payload.traveller_name = travellerName;
+  }
+
+  const url = travellerName
+    ? `${API_BASE_URL}/journey/plan?traveller_name=${encodeURIComponent(travellerName)}`
+    : `${API_BASE_URL}/journey/plan`;
+
+  const res = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
@@ -277,7 +285,6 @@ export async function confirmRoute(proposalId: string, accepted: boolean): Promi
   return await res.json();
 }
 
-import { TourPlanResponse, TouristAttraction } from '../types';
 
 export async function planTouristDay(
   startLocation: string,
@@ -314,6 +321,7 @@ export async function planTouristDay(
     // Local deterministic fallback tour plan
     const legs = selectedStops.map((stop, idx) => {
       const isRail = idx % 2 === 0;
+      const startHr = 9 + idx * 2;
       return {
         from_stop: idx === 0 ? startLocation : selectedStops[idx - 1].name,
         to_stop: stop.name,
@@ -325,6 +333,8 @@ export async function planTouristDay(
         duration_min: 22,
         distance_m: 4200,
         route_name: isRail ? 'Suburban Line' : 'BEST Feeder',
+        departure_time: `${String(startHr).padStart(2, '0')}:00`,
+        arrival_time: `${String(startHr).padStart(2, '0')}:22`,
       };
     });
 
@@ -340,6 +350,8 @@ export async function planTouristDay(
       duration_min: 25,
       distance_m: 5500,
       route_name: 'Suburban Line',
+      departure_time: '18:20',
+      arrival_time: '18:45',
     });
 
     const totalFare = legs.reduce((acc, l) => acc + l.fare_inr, 0);
@@ -352,6 +364,7 @@ export async function planTouristDay(
         arrival_time: `${String(startHr).padStart(2, '0')}:00`,
         departure_time: `${String(startHr + 1).padStart(2, '0')}:15`,
         dwell_minutes: stop.typical_dwell_minutes || 45,
+        priority: stop.priority || 'MEDIUM',
         is_open: true,
         open_time: stop.open_time || '09:00',
         close_time: stop.close_time || '20:00',
@@ -361,16 +374,26 @@ export async function planTouristDay(
     return {
       status: totalFare <= budgetInr ? 'PROTECTED' : 'BUDGET_DEFICIT',
       start_location: startLocation,
-      expected_return_time: '18:45',
+      budget_mode: budgetMode,
+      total_stops_visited: selectedStops.length,
+      total_travel_time_min: 22 * selectedStops.length + 25,
+      total_dwell_time_min: selectedStops.reduce((acc, s) => acc + (s.typical_dwell_minutes || 45), 0),
+      start_time: startTime,
       curfew_deadline: curfewDeadline,
-      total_transit_fare_inr: totalFare,
+      expected_return_time: '18:45',
+      slack_buffer_minutes: 45,
       min_budget_required_inr: totalFare,
+      total_transit_fare_inr: totalFare,
+      total_ticket_fare_inr: 0,
+      total_fare_inr: totalFare,
       budget_remaining_inr: Math.max(0, budgetInr - totalFare),
       is_budget_sufficient: totalFare <= budgetInr,
-      explanation: `Optimized multimodal circuit starting from ${startLocation} covering ${selectedStops.length} stops using BEST feeder routes and Mumbai Suburban Rail.`,
-      dropped_stops: [],
-      visit_windows: visitWindows,
+      total_walking_m: 800,
       legs: legs,
+      visit_windows: visitWindows,
+      dropped_stops: [],
+      reordered: false,
+      explanation: `Optimized multimodal circuit starting from ${startLocation} covering ${selectedStops.length} stops using BEST feeder routes and Mumbai Suburban Rail.`,
     };
   }
 }
@@ -410,17 +433,6 @@ export async function replanTouristDay(
   }
 }
 
-// Add or verify MOCK_TOURIST_ATTRACTIONS at the top or imports
-export interface TouristAttraction {
-  id: string;
-  name: string;
-  category: string;
-  lat: number;
-  lng: number;
-  estimatedVisitMin: number;
-  entryFee: number;
-  description: string;
-}
 
 export const MOCK_ATTRACTIONS: TouristAttraction[] = [
   {
@@ -491,3 +503,83 @@ export async function getTouristAttractions(): Promise<TouristAttraction[]> {
     return MOCK_ATTRACTIONS;
   }
 }
+
+export async function fetchAnalyticsStats(): Promise<any> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/analytics/stats`);
+    if (res.ok) {
+      return await res.json();
+    }
+  } catch (e) {
+    console.warn('Analytics stats fallback notice:', e);
+  }
+  return {
+    net_co2_abatement_kg: 1842,
+    trees_planted_equivalent: 88,
+    rumors_filtered: 47,
+    commute_delay_averted_min: 27.4,
+    avg_commute_cost_inr: 38.50,
+    cab_savings_percent: 78
+  };
+}
+
+export async function fetchVulnerabilityMatrix(): Promise<any[]> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/analytics/vulnerabilities`);
+    if (res.ok) {
+      const data = await res.json();
+      if (data.vulnerabilities && Array.isArray(data.vulnerabilities)) {
+        return data.vulnerabilities;
+      }
+    }
+  } catch (e) {
+    console.warn('Vulnerability matrix fallback notice:', e);
+  }
+  return [
+    {
+      corridor: 'Kurla Interchange (Central/Harbour)',
+      mode: 'RAIL',
+      dominantFailure: 'Signal Interlocking & Track Flooding',
+      riskLevel: 'CRITICAL',
+      avgDelayMin: 34,
+      monthlyIncidents: 28,
+      primaryCause: 'Low track elevation + high interlocking switch density',
+    },
+    {
+      corridor: 'Ghatkopar Metro Station (East-West)',
+      mode: 'METRO',
+      dominantFailure: 'Door Obstruction & Platform Overcrowding',
+      riskLevel: 'HIGH',
+      avgDelayMin: 18,
+      monthlyIncidents: 21,
+      primaryCause: 'Crush load surge from Central Railway transfers',
+    },
+    {
+      corridor: 'BKC Feeder Arterial (SCLR & Connector)',
+      mode: 'BUS',
+      dominantFailure: 'Surface Gridlock & Bus Bunching',
+      riskLevel: 'HIGH',
+      avgDelayMin: 26,
+      monthlyIncidents: 33,
+      primaryCause: 'Narrow entry funnels into corporate financial hub',
+    },
+    {
+      corridor: 'Dadar Junction Forecourt',
+      mode: 'RAIL',
+      dominantFailure: 'Footpath Blockage & Wheelchair Inaccessibility',
+      riskLevel: 'MEDIUM',
+      avgDelayMin: 12,
+      monthlyIncidents: 14,
+      primaryCause: 'Encroached station exits and broken pedestrian curbs',
+    },
+    {
+      corridor: 'Andheri Subway & West Approach',
+      mode: 'BUS',
+      dominantFailure: 'Monsoon Sump Waterlogging',
+      riskLevel: 'CRITICAL',
+      avgDelayMin: 45,
+      monthlyIncidents: 19,
+      primaryCause: 'Underpass drainage saturation forcing multi-km detours',
+    },
+  ];
+}

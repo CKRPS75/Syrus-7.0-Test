@@ -378,7 +378,7 @@ export default function TouristPlanner() {
                     >
                       {stop.priority}
                     </span>
-                    {stop.fare_inr > 0 && ` • Entry Ticket: ₹${stop.fare_inr}`}
+                    {(stop.fare_inr || 0) > 0 && ` • Entry Ticket: ₹${stop.fare_inr}`}
                   </p>
                 </div>
                 <button

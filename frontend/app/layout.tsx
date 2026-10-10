@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   description: "Plan smarter journeys with TrustRoute's evidence-aware mobility intelligence.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
       lang="en"

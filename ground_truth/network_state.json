@@ -1,0 +1,14 @@
+{
+  "city": "Mumbai",
+  "gtfs_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "osm_version": "mumbai-latest-2026",
+  "modes_active": ["BUS", "METRO", "RAIL", "WALK"],
+  "corridors": [
+    {"id": "METRO_1", "name": "Metro Line 1 (Versova - Ghatkopar)", "status": "NOMINAL", "headway_min": 4},
+    {"id": "METRO_2A", "name": "Metro Line 2A (Dahisar - Andheri West)", "status": "NOMINAL", "headway_min": 6},
+    {"id": "METRO_7", "name": "Metro Line 7 (Dahisar East - Gundavali)", "status": "NOMINAL", "headway_min": 6},
+    {"id": "WESTERN_RAIL", "name": "Western Suburban Railway", "status": "NOMINAL", "headway_min": 3},
+    {"id": "CENTRAL_RAIL", "name": "Central Suburban Railway", "status": "NOMINAL", "headway_min": 4},
+    {"id": "BEST_BUS_MAIN", "name": "BEST Feeder Network", "status": "NOMINAL", "headway_min": 10}
+  ]
+}

@@ -91,7 +91,7 @@ class TrustEngine:
             evidence_items, provenance_records
         )
 
-        # 3. Apply Crowd-Only Evidence Cap (+2.6)
+        # 3. Apply Crowd-Only Evidence Cap (+2.6 max logit contribution)
         crowd_cap_applied = crowd_sum > self.crowd_cap
         effective_crowd_sum = min(crowd_sum, self.crowd_cap) if crowd_sum > 0 else crowd_sum
 
@@ -106,14 +106,17 @@ class TrustEngine:
         total_logit = self.prior_logit + effective_crowd_sum + non_crowd_sum + contradiction_penalty
 
         # 6. Uncalibrated Confidence Score: P* = 1 / (1 + exp(-L))
-        # Clamp logit to prevent math overflow
         clamped_logit = max(min(total_logit, 30.0), -30.0)
         p_star = 1.0 / (1.0 + math.exp(-clamped_logit))
 
-        # 7. Decision Threshold Mapping
+        # 7. Decision Threshold Mapping & Crowd Guardrail
+        # Crowd-only signals can never trigger CONFIRMED (P* cap <= 0.599)
+        if non_crowd_sum <= 0.0 and p_star >= 0.60:
+            p_star = min(p_star, 0.599)
+
         if p_star < self.thresholds.get("ignore_max", 0.30):
             decision = TrustDecision.IGNORE
-        elif p_star < self.thresholds.get("confirmed_min", 0.65):
+        elif p_star < self.thresholds.get("confirmed_min", 0.65) or non_crowd_sum <= 0.0:
             decision = TrustDecision.WATCH
         else:
             decision = TrustDecision.CONFIRMED

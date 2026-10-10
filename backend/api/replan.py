@@ -88,10 +88,60 @@ def replan_commuter_journey(req: CommuterReplanRequest):
     time_saved_min = 27
 
     alt_legs = [
-        {"mode": "WALK", "route_name": "Walk", "from_place": req.origin, "to_place": f"{req.origin} Station", "duration_min": 5, "distance_m": 350},
-        {"mode": "BUS", "route_name": "AC Express 505", "from_place": f"{req.origin} Station", "to_place": "Bandra Station East", "duration_min": 24, "distance_m": 8500},
-        {"mode": "RAIL", "route_name": "Western Local (Fast)", "from_place": "Bandra Station West", "to_place": f"{req.destination} Station", "duration_min": 14, "distance_m": 6200},
-        {"mode": "WALK", "route_name": "Walk", "from_place": f"{req.destination} Station", "to_place": req.destination, "duration_min": 5, "distance_m": 350}
+        {
+            "mode": "WALK",
+            "route_name": "Walk",
+            "from_place": req.origin,
+            "to_place": f"{req.origin} Bus Stand",
+            "duration_min": 5,
+            "distance_m": 350,
+            "coordinates": [[72.8974, 19.0622], [72.8955, 19.0645]],
+            "stops": [
+                {"name": req.origin, "coordinates": [72.8974, 19.0622]},
+                {"name": f"{req.origin} Bus Stand", "coordinates": [72.8955, 19.0645]}
+            ]
+        },
+        {
+            "mode": "BUS",
+            "route_name": "AC Express 505",
+            "from_place": f"{req.origin} Bus Stand",
+            "to_place": "Bandra Station East",
+            "duration_min": 24,
+            "distance_m": 8500,
+            "coordinates": [[72.8955, 19.0645], [72.8687, 19.0652], [72.8400, 19.0550]],
+            "stops": [
+                {"name": f"{req.origin} Bus Stand", "coordinates": [72.8955, 19.0645]},
+                {"name": "BKC Connector", "coordinates": [72.8687, 19.0652]},
+                {"name": "Bandra Station East", "coordinates": [72.8400, 19.0550]}
+            ]
+        },
+        {
+            "mode": "RAIL",
+            "route_name": "Western Local (Fast)",
+            "from_place": "Bandra Station West",
+            "to_place": f"{req.destination} Station",
+            "duration_min": 14,
+            "distance_m": 6200,
+            "coordinates": [[72.8400, 19.0550], [72.8430, 19.0800], [72.8467, 19.1197]],
+            "stops": [
+                {"name": "Bandra Station West", "coordinates": [72.8400, 19.0550]},
+                {"name": "Santacruz", "coordinates": [72.8430, 19.0800]},
+                {"name": f"{req.destination} Station", "coordinates": [72.8467, 19.1197]}
+            ]
+        },
+        {
+            "mode": "WALK",
+            "route_name": "Walk",
+            "from_place": f"{req.destination} Station",
+            "to_place": req.destination,
+            "duration_min": 5,
+            "distance_m": 350,
+            "coordinates": [[72.8467, 19.1197], [72.8464, 19.1197]],
+            "stops": [
+                {"name": f"{req.destination} Station", "coordinates": [72.8467, 19.1197]},
+                {"name": req.destination, "coordinates": [72.8464, 19.1197]}
+            ]
+        }
     ]
 
     alt_fare = 55.0 # ₹35 AC bus + ₹20 Fast local
@@ -120,15 +170,26 @@ def replan_commuter_journey(req: CommuterReplanRequest):
         }
 
     # USP 3 & USP 5: Confirmed Disruption with Feasible Alternative & Explainability
+    alt_itin = {
+        "arrival_time": alt_arrival,
+        "total_fare": alt_fare,
+        "walking_m": alt_walk,
+        "transfers": alt_transfers,
+        "legs": alt_legs
+    }
+
     return {
         "decision": "PROPOSE",
+        "proposal_id": f"PROP-{ev_resp.event_id}",
         "trust_status": decision.value,
         "confidence_score": round(conf_score, 4),
         "event_id": ev_resp.event_id,
         "disrupted_route": req.disrupted_route,
         "reason": f"Alternative avoids delayed {req.disrupted_route}, protects your deadline, and saves {time_saved_min} minutes.",
+        "time_saved_min": time_saved_min,
         "time_saved_minutes": time_saved_min,
         "confirmation_required": True,
+        "alternative_itinerary": alt_itin,
         "comparison": {
             "current": {
                 "arrival": current_arrival,

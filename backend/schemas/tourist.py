@@ -5,15 +5,27 @@ class TouristStopInput(BaseModel):
     id: str
     name: str
     lat: float
-    lon: float
+    lon: Optional[float] = None
+    lng: Optional[float] = None
     open_time: str = "00:00"
     close_time: str = "23:59"
     dwell_minutes: int = 45
+    typical_dwell_minutes: Optional[int] = None
     priority: str = "MEDIUM" # HIGH, MEDIUM, LOW, FIXED
     fare_inr: float = 0.0
+    entryFee: Optional[float] = None
+
+    def get_lon(self) -> float:
+        if self.lon is not None:
+            return self.lon
+        if self.lng is not None:
+            return self.lng
+        return 72.8464
+
 
 class PlanTourRequest(BaseModel):
-    start_location_name: str = "Kalyan"
+    start_location_name: Optional[str] = None
+    start_location: Optional[str] = None
     custom_start_lat: Optional[float] = None
     custom_start_lon: Optional[float] = None
     stops: List[TouristStopInput]

@@ -276,14 +276,14 @@ class EvidenceExtractor:
         """
         sanitized_text = self._sanitize_untrusted_text(raw_input.text)
 
-        # 1. Try Google Gemini API if key is present
-        if self.gemini_api_key:
+        # 1. Try Google Gemini API if valid key is present
+        if self.gemini_api_key and not self.gemini_api_key.startswith("your_gemini") and len(self.gemini_api_key) > 20:
             extracted = self._call_gemini_api(raw_input, sanitized_text)
             if extracted:
                 return extracted
 
-        # 2. Try OpenAI API if key is present
-        if self.openai_api_key:
+        # 2. Try OpenAI API if valid key is present
+        if self.openai_api_key and not self.openai_api_key.startswith("your_openai") and len(self.openai_api_key) > 20:
             extracted = self._call_openai_api(raw_input, sanitized_text)
             if extracted:
                 return extracted

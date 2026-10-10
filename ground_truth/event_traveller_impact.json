@@ -1,0 +1,38 @@
+[
+  {
+    "event_id": "GT_EV_01",
+    "traveller_id": "T1",
+    "persona": "Commuter Chembur -> Andheri",
+    "affects_journey": true,
+    "should_reroute": true,
+    "optimal_action": "REROUTE_VIA_WESTERN_RAIL",
+    "ground_truth_time_saved_min": 27
+  },
+  {
+    "event_id": "GT_EV_02",
+    "traveller_id": "T1",
+    "persona": "Commuter Chembur -> Andheri",
+    "affects_journey": false,
+    "should_reroute": false,
+    "optimal_action": "KEEP_CURRENT_ROUTE",
+    "ground_truth_time_saved_min": 0
+  },
+  {
+    "event_id": "GT_EV_03",
+    "traveller_id": "T2",
+    "persona": "Budget Conscious Traveller",
+    "affects_journey": true,
+    "should_reroute": false,
+    "optimal_action": "KEEP_CURRENT_ROUTE",
+    "reason": "Alternative exceeds budget constraint of ₹50"
+  },
+  {
+    "event_id": "GT_EV_04",
+    "traveller_id": "T4",
+    "persona": "Wheelchair Accessible Traveller",
+    "affects_journey": true,
+    "should_reroute": true,
+    "optimal_action": "REROUTE_ACCESSIBLE_METRO_ONLY",
+    "reason": "Maintains elevator access"
+  }
+]

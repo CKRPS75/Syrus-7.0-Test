@@ -1,0 +1,62 @@
+[
+  {
+    "event_id": "GT_EV_01",
+    "true_status": "ACTIVE_DISRUPTION",
+    "corridor": "Metro Line 1",
+    "station": "Andheri Metro Station",
+    "severity": "HIGH",
+    "ground_truth_delay_minutes": 35,
+    "disruption_type": "delay",
+    "start_time": "2026-10-09T17:15:00Z",
+    "end_time": "2026-10-09T18:45:00Z",
+    "description": "Overhead traction wire failure near Andheri causing heavy delays."
+  },
+  {
+    "event_id": "GT_EV_02",
+    "true_status": "FALSE_ALARM",
+    "corridor": "Western Railway",
+    "station": "Bandra",
+    "severity": "NONE",
+    "ground_truth_delay_minutes": 0,
+    "disruption_type": "rumour",
+    "start_time": "2026-10-09T17:00:00Z",
+    "end_time": "2026-10-09T17:30:00Z",
+    "description": "False social media panic claiming train derailment at Bandra."
+  },
+  {
+    "event_id": "GT_EV_03",
+    "true_status": "ACTIVE_DISRUPTION",
+    "corridor": "BEST Bus Route 351",
+    "station": "Kurla West",
+    "severity": "MEDIUM",
+    "ground_truth_delay_minutes": 20,
+    "disruption_type": "flooding",
+    "start_time": "2026-10-09T16:30:00Z",
+    "end_time": "2026-10-09T19:30:00Z",
+    "description": "Waterlogging on LBS Marg slowing bus traffic."
+  },
+  {
+    "event_id": "GT_EV_04",
+    "true_status": "ACTIVE_DISRUPTION",
+    "corridor": "Central Railway",
+    "station": "Dadar",
+    "severity": "HIGH",
+    "ground_truth_delay_minutes": 45,
+    "disruption_type": "signal_failure",
+    "start_time": "2026-10-09T17:30:00Z",
+    "end_time": "2026-10-09T19:00:00Z",
+    "description": "Major interlocking signal failure on fast lines at Dadar."
+  },
+  {
+    "event_id": "GT_EV_05",
+    "true_status": "RESOLVED",
+    "corridor": "Metro Line 2A",
+    "station": "Dahisar East",
+    "severity": "LOW",
+    "ground_truth_delay_minutes": 0,
+    "disruption_type": "resolved_maintenance",
+    "start_time": "2026-10-09T15:00:00Z",
+    "end_time": "2026-10-09T16:00:00Z",
+    "description": "Scheduled morning maintenance completed, normal operations restored."
+  }
+]

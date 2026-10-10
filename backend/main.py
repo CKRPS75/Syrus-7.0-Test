@@ -14,6 +14,7 @@ from backend.api.replan import router as replan_router
 from backend.api.confirm import router as confirm_router
 from backend.api.tourist import router as tourist_router
 from backend.api.auth import router as auth_router
+from backend.api.analytics import router as analytics_router
 
 configured_origins = [
     origin.strip()
@@ -50,6 +51,7 @@ app.include_router(confirm_router)
 app.include_router(evidence_router)
 app.include_router(tourist_router)
 app.include_router(auth_router)
+app.include_router(analytics_router)
 
 @app.get("/", tags=["Health"])
 async def root():

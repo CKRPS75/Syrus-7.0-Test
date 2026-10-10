@@ -37,16 +37,13 @@ class CorroborationEngine:
         non_crowd_sum = 0.0
         detailed_weights: Dict[str, float] = {}
 
-        # Map provenance by source_id
-        prov_map = {p.source_id: p for p in provenance_records}
-
         independent_crowd_count = 0
         independent_sources_seen = set()
 
-        for item in evidence_items:
+        for idx, item in enumerate(evidence_items):
             src_id = item.extracted.source_id
             src_type = item.extracted.source_type
-            prov = prov_map.get(src_id)
+            prov = provenance_records[idx] if idx < len(provenance_records) else None
             indep_status = prov.independence if prov else IndependenceType.INDEPENDENT
 
             # Ungroundable check
@@ -59,9 +56,14 @@ class CorroborationEngine:
                     non_crowd_sum += w_ungroundable
                 continue
 
-            # Ignore copy-rings and duplicate echoes from adding positive weight
+            # Apply Redundancy Theorem: Copy-rings and duplicate echoes receive a redundancy discount / penalty
             if indep_status in (IndependenceType.COPY_DERIVED, IndependenceType.DUPLICATE):
-                detailed_weights[f"{src_id}_copy_echo"] = 0.0
+                w_redundant = self.weights.get("redundant_duplicate_penalty", -0.4)
+                detailed_weights[f"{src_id}_redundant_duplicate"] = w_redundant
+                if src_type == SourceType.CROWD:
+                    crowd_sum += w_redundant
+                else:
+                    non_crowd_sum += w_redundant
                 continue
 
             # This is an independent report
