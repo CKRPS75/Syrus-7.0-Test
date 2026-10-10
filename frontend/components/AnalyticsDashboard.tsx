@@ -70,7 +70,7 @@ export default function AnalyticsDashboard() {
     <section className="space-y-6 text-slate-800">
       <header>
         <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">Multimodal Transit Analytics &amp; Vulnerability Matrix</h1>
-        <p className="mt-1 text-sm text-slate-500">Illustrative pilot reference metrics for transit reliability, carbon impact, and corridor-level fault patterns — not live analytics telemetry.</p>
+        <p className="mt-1 text-sm text-slate-500">Live multimodal transit metrics, carbon abatement tracking, and corridor-level vulnerability matrix backed by TrustRoute database telemetry.</p>
       </header>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
